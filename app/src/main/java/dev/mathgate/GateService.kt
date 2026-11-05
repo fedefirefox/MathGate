@@ -125,7 +125,7 @@ class GateService : AccessibilityService() {
                 performGlobalAction(GLOBAL_ACTION_HOME)
             }
         })
-        val scroll = ScrollView(this).apply { fillViewport = true; addView(panel) }
+        val scroll = ScrollView(this).apply { isFillViewport = true; addView(panel) }
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
