@@ -1,0 +1,57 @@
+name: Verify and publish alternate GitHub downloads
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/download-fallback.yml'
+  workflow_dispatch:
+
+jobs:
+  publish-alternatives:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the publicly published APK, verify checksum
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mathgate-download
+          cd /tmp/mathgate-download
+          curl --fail --location --retry 4 --retry-delay 2 --connect-timeout 20 \
+            "https://github.com/fedefirefox/MathGate/releases/download/v0.6.0/MathGate-v0.6.0.apk" \
+            --output MathGate-v0.6.0.apk
+          curl --fail --location --retry 4 --retry-delay 2 --connect-timeout 20 \
+            "https://github.com/fedefirefox/MathGate/releases/download/v0.6.0/MathGate-v0.6.0.sha256" \
+            --output MathGate-v0.6.0.sha256
+          sha256sum --check MathGate-v0.6.0.sha256
+          file MathGate-v0.6.0.apk
+          test "$(stat -c%s MathGate-v0.6.0.apk)" -gt 1000000
+      - name: Create ZIP fallback
+        run: |
+          cd /tmp/mathgate-download
+          zip -9 MathGate-v0.6.0.zip MathGate-v0.6.0.apk MathGate-v0.6.0.sha256
+          unzip -t MathGate-v0.6.0.zip
+      - name: Add ZIP fallback to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v0.6.0 /tmp/mathgate-download/MathGate-v0.6.0.zip --clobber
+      - name: Publish a secondary download on the downloads branch
+        run: |
+          set -euo pipefail
+          git checkout --orphan downloads
+          git rm -rf .
+          cp /tmp/mathgate-download/MathGate-v0.6.0.apk .
+          cp /tmp/mathgate-download/MathGate-v0.6.0.sha256 .
+          cp /tmp/mathgate-download/MathGate-v0.6.0.zip .
+          printf '# MathGate Android downloads\n\n' > README.md
+          printf 'Validated APK, SHA-256 checksum and ZIP fallback for v0.6.0.\n' >> README.md
+          printf 'The signed asset library is on main. This branch holds APK downloads only.\n' >> README.md
+          git add README.md MathGate-v0.6.0.apk MathGate-v0.6.0.sha256 MathGate-v0.6.0.zip
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "Publish verified MathGate v0.6.0 alternative downloads"
+          git push origin HEAD:refs/heads/downloads
