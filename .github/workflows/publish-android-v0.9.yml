@@ -1,0 +1,51 @@
+name: Publish MathGate Android v0.9.0 (no repeat questions)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-android-v0.9.yml'
+  workflow_dispatch:
+jobs:
+  publish:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve tested Android v0.9.0 APK
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mathgate-v09
+          gh run download 42125346044 --repo fedefirefox/MathGate \
+            --name MathGate-debug-apk --dir /tmp/mathgate-v09
+          test -s /tmp/mathgate-v09/app-debug.apk
+          cp /tmp/mathgate-v09/app-debug.apk MathGate-v0.9.0.apk
+          sha256sum MathGate-v0.9.0.apk > MathGate-v0.9.0.sha256
+          file MathGate-v0.9.0.apk
+          test "$(stat -c%s MathGate-v0.9.0.apk)" -gt 1000000
+      - name: Publish release APK and ZIP
+        run: |
+          set -euo pipefail
+          zip -9 MathGate-v0.9.0.zip MathGate-v0.9.0.apk MathGate-v0.9.0.sha256
+          gh release create v0.9.0 \
+            MathGate-v0.9.0.apk \
+            MathGate-v0.9.0.sha256 \
+            MathGate-v0.9.0.zip \
+            --repo fedefirefox/MathGate \
+            --target f8a77dbf83a733c252ea7b7a99a4c50b58b908bd \
+            --title 'MathGate Android v0.9.0 — No repeating math challenges' \
+            --notes 'Android update: successful questions are never repeated within a difficulty until the available bank of 18 has been completed. Prefer a different subject family when possible. Failed or abandoned challenges stay unchanged. Seven question-selection JUnit tests passed. Everything else (20 minutes free, +5 minutes per claimed reward, AI cat congratulations, Samsung setup wizard, signed question library) remains unchanged. IMPORTANT: This is a development-signed APK. Your existing Android app may require a one-time uninstall before installation due to different signing certificates. The in-app updater will not bypass Android signature security.'
+      - name: Verify public APK download checksum
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-delay 2 \
+            --output downloaded.apk \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.9.0/MathGate-v0.9.0.apk
+          EXPECTED="$(cut -d' ' -f1 MathGate-v0.9.0.sha256)"
+          ACTUAL="$(sha256sum downloaded.apk | cut -d' ' -f1)"
+          [ "$EXPECTED" = "$ACTUAL" ]
+          echo "Public APK verified: $ACTUAL"
