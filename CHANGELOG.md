@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.0 — Signed data and security review
+- Owner-signed ECDSA P-256 manifest required for GitHub math and cat-meme updates.
+- SHA-256 integrity checks for all downloaded JSON and WebP assets.
+- Cached downloads are revalidated before use; unsigned changes fail closed to bundled data.
+- Added local signing/verification tools and CI signature enforcement.
+- Added detailed repository protection steps in SECURITY.md.
+- No change to Instagram's base 20 minutes, +5 reward, or cat congratulations flow.
+
 ## v0.5.0
 - Added a **Congrats!** reward Activity between a correct answer and the +5-minute Instagram credit.
 - Illustrated daily AI-cat meme and 16 playful captions, rotating by local day.

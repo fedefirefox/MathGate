@@ -4,7 +4,10 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.5.0?
+## What's in version 0.6.0?
+
+**Security hardening:** GitHub-hosted equations and cat memes now require an **owner-signed ECDSA P-256 manifest and matching SHA-256 hashes**. An unsigned GitHub edit is rejected by the app. This protects installed users from unauthorized content edits after they have installed v0.6. See [SECURITY.md](SECURITY.md) for the private-key owner workflow and GitHub branch-protection setup.
+
 
 **New reward flow:** after submitting the correct answer, MathGate shows a *Congrats!* celebration, an AI-created cat illustration, a silly daily caption, and a **Claim +5:00 · Open Instagram** button. The five-minute allowance is awarded **only when that button is tapped**. Leaving the reward screen without claiming leaves a pending reward for the same day; it cannot be claimed twice. The daily Instagram time rule is unchanged.
 
@@ -26,7 +29,7 @@ The APK bundles **two compact AI-generated cat illustrations**, paired with **16
 
 ## Meme catalogue and GitHub updates
 
-The editable [cat meme catalogue](app/src/main/assets/cat_memes.json) contains entries with `id`, `image`, `title`, and `message`. To add a new picture, commit a WebP file named `cat_NN.webp` under [app/src/main/assets/memes](app/src/main/assets/memes) and reference its exact filename in the catalogue. Increment top-level `revision` before committing. In the app, select **Download AI cat memes from GitHub** to retrieve the new data and images. Only the project's fixed GitHub path is accepted. Images are type-, dimensions-, and size-checked; no remote code is executed.
+The editable [cat meme catalogue](app/src/main/assets/cat_memes.json) contains entries with `id`, `image`, `title`, and `message`. To add a new picture, commit a WebP file named `cat_NN.webp` under [app/src/main/assets/memes](app/src/main/assets/memes) and reference its exact filename in the catalogue. Increment top-level `revision` and sign all affected assets using your private key before committing (see [SECURITY.md](SECURITY.md)). In the app, select **Download AI cat memes from GitHub** to retrieve the new data and images. Only the project's fixed GitHub path is accepted. Images are type-, dimensions-, and size-checked; no remote code is executed.
 
 A meme is selected based on the local day and remains stable for that day, even if the catalogue is refreshed. The library currently contains **16 daily captions and 2 images**. To add a genuinely new AI-generated image every day automatically, a scheduled generation workflow and private provider credentials would be needed.
 
@@ -78,12 +81,14 @@ It contains a **versioned, editable JSON array** of exercises. Each item specifi
 
 To publish new questions:
 
-1. Add a validated question to the JSON file on GitHub.
-2. Increment the top-level **revision** number.
-3. Commit the file to the main branch.
-4. Open MathGate and select **Download new equations from GitHub**.
+1. Add a mathematically checked question to the JSON file and increment the top-level `revision`.
+2. **Sign** the changed library using your private owner key outside GitHub: `python3 tools/sign_assets.py --key /secure/location/MathGate_OWNER_PRIVATE_SIGNING_KEY.pem`.
+3. Commit the data and both signed manifest files from `security/` to GitHub. CI checks the signature and data.
+4. In MathGate select **Download new equations from GitHub**. No APK reinstall is needed.
 
-MathGate retrieves only that HTTPS file, validates it strictly (schema, size, IDs, difficulty levels, numerical answers, tolerances), and stores the data locally. **No remote code executes.** The offline library is always retained as fallback. App releases and question-library revisions are independent.
+**An unsigned data change will intentionally fail to download.** The private key must remain offline and is never part of the public repository. See [SECURITY.md](SECURITY.md).
+
+MathGate retrieves only the expected HTTPS files, validates the **owner's digital signature, signed SHA-256 hashes** and schemas, and stores the data locally. **No remote code executes.** The offline library is always retained as fallback. App releases and question-library revisions are independent.
 
 Every commit triggers [question-bank structural validation](tools/validate_problem_bank.py). Structural validation is **not** mathematical verification: new questions need their answer checked independently.
 
@@ -103,4 +108,8 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.5.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.6.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+
+## Repository protection status
+
+The public source is readable and forkable, not publicly writable. However, the repository had **no branch rulesets** at the last security inspection. The owner must enable protection in [Settings → Rules](https://github.com/fedefirefox/MathGate/settings/rules) and review collaborators in [Settings → Access](https://github.com/fedefirefox/MathGate/settings/access). The connected GitHub tool cannot manage those administrator-only settings. See [SECURITY.md](SECURITY.md) for exact steps.

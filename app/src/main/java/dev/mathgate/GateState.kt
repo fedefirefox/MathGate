@@ -7,7 +7,6 @@ import android.content.Context
 import android.os.Process
 import android.os.SystemClock
 import java.security.SecureRandom
-import java.util.UUID
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.abs
@@ -42,10 +41,7 @@ object GateState {
         val p = prefs(c)
         if (p.getString("day", null) != today()) {
             p.edit().putString("day", today()).putInt("bonuses", 0)
-                .remove("challengeSeed")
-                .remove("rewardTicket")
-                .remove("rewardProblem")
-                .apply()
+                .remove("challengeSeed").apply()
         }
     }
 
@@ -132,48 +128,16 @@ object GateState {
         return used < 0L || used >= allowanceMs(c)
     }
 
-    /**
-     * A verified answer offers, but does not yet award, the five-minute reward.
-     * An unclaimed reward survives switching apps until the local day changes.
+    /** A successful challenge adds precisely five minutes to today's foreground allowance.
+     * Bonuses carry across Instagram sessions and reset at local midnight.
      */
-    @Synchronized
-    fun offerReward(c: Context, verifiedProblemId: String): String? {
+    fun earnFiveMinutes(c: Context): Boolean {
         ensureDay(c)
-        if (!hasUsageAccess(c) || !needsChallenge(c)) return null
+        if (!hasUsageAccess(c) || !needsChallenge(c)) return false
         val p = prefs(c)
-        val existing = p.getString("rewardTicket", null)
-        if (!existing.isNullOrBlank()) return existing
-        val ticket = UUID.randomUUID().toString()
-        val accepted = p.edit()
-            .putString("rewardTicket", ticket)
-            .putString("rewardProblem", verifiedProblemId.take(80))
-            .commit()
-        return if (accepted) ticket else null
-    }
-
-    fun pendingReward(c: Context): String? {
-        ensureDay(c)
-        return prefs(c).getString("rewardTicket", null)
-    }
-
-    /**
-     * Crediting is an atomic, one-time local action triggered ONLY by the
-     * user's Claim +5:00 button. Never credit on correct-answer detection.
-     */
-    @Synchronized
-    fun claimReward(c: Context, ticket: String): Boolean {
-        ensureDay(c)
-        if (!hasUsageAccess(c)) return false
-        val p = prefs(c)
-        val pending = p.getString("rewardTicket", null)
-        if (pending.isNullOrEmpty() || pending != ticket) return false
-        val current = p.getInt("bonuses", 0).coerceIn(0, 100_000)
-        return p.edit()
-            .putInt("bonuses", current + 1)
-            .remove("rewardTicket")
-            .remove("rewardProblem")
-            .remove("challengeSeed")
-            .commit()
+        val n = p.getInt("bonuses", 0).coerceIn(0, 100_000)
+        p.edit().putInt("bonuses", n + 1).remove("challengeSeed").apply()
+        return true
     }
 
     fun problem(c: Context): CalculusProblem {

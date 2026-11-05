@@ -227,8 +227,8 @@ class MainActivity : Activity() {
         GateUi.add(root, GateUi.text(this, "QUESTION LIBRARY",
             14f, GateUi.TEAL, true), bottom = 5)
         GateUi.add(root, GateUi.text(this,
-            problemCount.toString() + " exercises · library revision " +
-                libraryRevision + " · rendered offline",
+            problemCount.toString() + " exercises · revision " +
+                libraryRevision + " · offline · signed GitHub updates",
             14f, GateUi.MUTED), bottom = 11)
         GateUi.add(root, GateUi.button(this,
             "↻  Download new equations from GitHub",

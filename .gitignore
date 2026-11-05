@@ -6,3 +6,12 @@
 *.iml
 *.apk
 *.aab
+
+# NEVER commit private signing or APK release keys
+*PRIVATE*KEY*.pem
+*private*key*.pem
+*.keystore
+*.jks
+*.p12
+.env
+.env.*

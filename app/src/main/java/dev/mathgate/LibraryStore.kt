@@ -76,7 +76,11 @@ object LibraryStore {
         val cached = File(context.filesDir, FILE_NAME)
         if (!cached.exists() || cached.length() > MAX_BYTES) return bundled
         return try {
-            val downloaded = validate(cached.readText(Charsets.UTF_8))
+            val bytes = cached.readBytes()
+            val signed = ContentTrust.cached(context)
+            if (signed == null ||
+                !signed.matches(ContentTrust.QUESTION_PATH, bytes)) return bundled
+            val downloaded = validate(bytes.toString(Charsets.UTF_8))
             if (downloaded.revision > bundled.revision) downloaded else bundled
         } catch (_: Exception) {
             bundled
@@ -107,28 +111,14 @@ object LibraryStore {
         Thread {
             var connection: HttpsURLConnection? = null
             try {
-                val source = URL(URL_RAW)
-                connection = source.openConnection() as HttpsURLConnection
-                connection.connectTimeout = 8_000
-                connection.readTimeout = 8_000
-                connection.instanceFollowRedirects = false
-                connection.setRequestProperty("Accept", "application/json")
-                require(connection.responseCode == HttpURLConnection.HTTP_OK) {
-                    "GitHub HTTP " + connection.responseCode
+                val signed = ContentTrust.fetch()
+                val verifiedBytes = ContentTrust.download(
+                    ContentTrust.QUESTION_PATH, MAX_BYTES
+                )
+                require(signed.matches(ContentTrust.QUESTION_PATH, verifiedBytes)) {
+                    "Question bank rejected: owner signature or checksum mismatch"
                 }
-                val out = ByteArrayOutputStream()
-                connection.inputStream.use { input ->
-                    val buf = ByteArray(4096)
-                    while (true) {
-                        val count = input.read(buf)
-                        if (count < 0) break
-                        require(out.size() + count <= MAX_BYTES) {
-                            "GitHub file is too large"
-                        }
-                        out.write(buf, 0, count)
-                    }
-                }
-                val raw = out.toByteArray().toString(Charsets.UTF_8)
+                val raw = verifiedBytes.toString(Charsets.UTF_8)
                 val downloaded = validate(raw)
                 val current = current(app)
                 if (downloaded.revision <= current.revision) {
@@ -139,15 +129,16 @@ object LibraryStore {
                     val destination = File(app.filesDir, FILE_NAME)
                     temp.writeText(raw, Charsets.UTF_8)
                     if (!temp.renameTo(destination)) {
-                        // Atomic rename ordinarily succeeds within app-private storage.
                         temp.copyTo(destination, overwrite = true)
                         temp.delete()
                     }
-                    callback("Updated to revision " + downloaded.revision + " · " +
-                        downloaded.problems.size + " problems available")
+                    ContentTrust.save(app, signed)
+                    callback("Owner-signed library installed: revision " +
+                        downloaded.revision + " · " +
+                        downloaded.problems.size + " problems")
                 }
             } catch (err: Exception) {
-                callback("Couldn't download questions: " +
+                callback("Signed update not installed: " +
                     (err.message ?: "network unavailable") + ". Offline problems remain available.")
             } finally {
                 connection?.disconnect()
