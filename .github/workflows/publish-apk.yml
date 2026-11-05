@@ -1,14 +1,10 @@
-name: Publish MathGate APK (direct download)
+name: Publish stable-signed MathGate APK
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-apk.yml'
   workflow_dispatch:
 
 jobs:
-  release-apk:
+  release:
     if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -25,26 +21,80 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Validate problem and meme libraries
+      - name: Validate owner-signed data and cats
         run: |
           python3 tools/validate_problem_bank.py
           python3 tools/validate_cat_memes.py
           python3 tools/verify_assets.py
-      - name: Build installable APK
-        run: gradle --no-daemon assembleDebug
-      - name: Prepare release APK and checksum
+      - name: Check for permanent release signing identity
+        id: signing
+        env:
+          SIGNING_BUNDLE_B64: ${{ secrets.MATHGATE_SIGNING_BUNDLE_BASE64 }}
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk MathGate-v0.6.0.apk
-          sha256sum MathGate-v0.6.0.apk > MathGate-v0.6.0.sha256
-          test -s MathGate-v0.6.0.apk
-      - name: Publish direct-download GitHub Release
+          if [ -z "$SIGNING_BUNDLE_B64" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No permanent signing key configured. No release will be published."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Read signing identity from GitHub repository secret
+        if: steps.signing.outputs.ready == 'true'
+        env:
+          SIGNING_BUNDLE_B64: ${{ secrets.MATHGATE_SIGNING_BUNDLE_BASE64 }}
+        run: |
+          python3 - <<'PY'
+          import base64, io, json, os, pathlib, zipfile
+          from pathlib import Path
+          secret = base64.b64decode(os.environ["SIGNING_BUNDLE_B64"], validate=True)
+          assert len(secret) < 40_000
+          bundle = zipfile.ZipFile(io.BytesIO(secret))
+          assert set(bundle.namelist()) == {"mathgate-release.p12", "credentials.json"}
+          credentials = json.loads(bundle.read("credentials.json"))
+          assert set(credentials) == {"alias", "store_password", "key_password"}
+          for key, value in credentials.items():
+              assert isinstance(value, str) and 8 <= len(value) <= 128
+          folder = Path(os.environ["RUNNER_TEMP"]) / "mathgate-signing"
+          folder.mkdir(mode=0o700, exist_ok=True)
+          signing_file = folder / "mathgate-release.p12"
+          signing_file.write_bytes(bundle.read("mathgate-release.p12"))
+          signing_file.chmod(0o600)
+          mapping = {
+              "MATHGATE_KEYSTORE_PATH": str(signing_file),
+              "MATHGATE_STORE_PASSWORD": credentials["store_password"],
+              "MATHGATE_KEY_PASSWORD": credentials["key_password"],
+              "MATHGATE_KEY_ALIAS": credentials["alias"]
+          }
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              for key, value in mapping.items():
+                  assert "\n" not in value
+                  print("::add-mask::" + value)
+                  env.write(key + "=" + value + "\n")
+          print("Stable private release key loaded without publishing it.")
+          PY
+      - name: Build permanently signed release APK
+        if: steps.signing.outputs.ready == 'true'
+        run: gradle --no-daemon assembleRelease
+      - name: Verify signed APK and generate checksum
+        if: steps.signing.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -n1)
+          [ -n "$VERSION" ]
+          APK="MathGate-v${VERSION}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          sha256sum "$APK" > "MathGate-v${VERSION}.sha256"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+      - name: Publish official same-key APK (Android user approval still required)
+        if: steps.signing.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v0.6.0 \
-            MathGate-v0.6.0.apk \
-            MathGate-v0.6.0.sha256 \
+          set -euo pipefail
+          gh release create "v$VERSION" \
+            "MathGate-v${VERSION}.apk" \
+            "MathGate-v${VERSION}.sha256" \
             --target "$GITHUB_SHA" \
-            --title "MathGate v0.6.0 — Android APK (development preview)" \
-            --notes "Direct-download Android APK. Built from public source after question, cat-meme, and owner-signature checks. On Samsung enable Usage Access and Accessibility restricted settings. IMPORTANT: this is a debug-signed preview; Android may require uninstalling a previous MathGate build because the certificate changes between builds. Not yet physically tested on Samsung. No app permissions can be bypassed automatically." \
-            --latest
+            --title "MathGate v$VERSION (stable-signed)" \
+            --notes "Signed with the permanent MathGate release certificate. New update workflow: tap Update MathGate directly from GitHub in the app; Android will ask you to confirm installation. The FIRST transition from the old debug-signed v0.6.0 requires uninstalling it. Future releases using the same keystore can update in place. This release is not silently installed."
+          echo "Public release available at https://github.com/fedefirefox/MathGate/releases/tag/v$VERSION"

@@ -4,7 +4,15 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.6.0?
+## What's in version 0.7.0?
+
+**Real Android layout repair:** the Victory screen now fits the cat meme at its full original aspect ratio, without a 255dp crop. Claim +5:00 and Leave are in a fixed bottom area above the Samsung navigation bar, including Android 15/16 system-bar insets.
+
+**In-app application updater:** press **Update MathGate directly from GitHub**. The app checks the official latest Release, downloads its APK over HTTPS, validates size and GitHub's SHA-256 digest, confirms the package name and that the signing certificate matches your currently installed version, then launches the Android system installer. You still approve installation and may need to allow MathGate as an installation source once. No downloaded update can execute code without Android's installation approval.
+
+**One-time prerequisite:** v0.6.0 uses a temporary CI debug certificate. Android cannot update it in place using a different signing certificate. The new permanent release identity requires one initial uninstall/install transition from v0.6.0 to the first stable-signed v0.7.0 release. After that, future versions signed by the same owner-controlled identity can install without uninstalling MathGate. See [UPDATING.md](UPDATING.md).
+
+
 
 **Security hardening:** GitHub-hosted equations and cat memes now require an **owner-signed ECDSA P-256 manifest and matching SHA-256 hashes**. An unsigned GitHub edit is rejected by the app. This protects installed users from unauthorized content edits after they have installed v0.6. See [SECURITY.md](SECURITY.md) for the private-key owner workflow and GitHub branch-protection setup.
 
@@ -69,7 +77,7 @@ Open [Build Android APK workflows](https://github.com/fedefirefox/MathGate/actio
 
 When stable APK releases are published, they will appear under [GitHub Releases](https://github.com/fedefirefox/MathGate/releases). The in-app **Check for MathGate app update** button checks this endpoint.
 
-**Important:** The present debug APKs are signed using runner-specific GitHub Actions debug keys. A future APK may have a different certificate, and Android will then refuse an in-place update. It may require uninstalling the previous version. For reliable in-place APK upgrades, the maintainer must configure a consistent, PRIVATE release-signing keystore through encrypted GitHub Actions secrets and publish release APKs. **This signing infrastructure has not yet been configured.** Reinstalling can clear locally earned minutes and settings, although system usage history persists.
+**Important:** Versions through v0.6.0 were signed using runner-specific GitHub Actions debug keys. A future APK may have a different certificate, and Android will then refuse an in-place update. It may require uninstalling the previous version. The v0.7.0 release workflow is prepared to use a permanent private signing identity from GitHub Actions secret `MATHGATE_SIGNING_BUNDLE_BASE64`. **The owner must add that secret once; until then the workflow deliberately publishes no official v0.7 release.** Reinstalling can clear locally earned minutes and settings, although system usage history persists.
 
 ## Get more problems from GitHub (no APK reinstall)
 
@@ -108,8 +116,12 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.6.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.7.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
 
 ## Repository protection status
 
 The public source is readable and forkable, not publicly writable. However, the repository had **no branch rulesets** at the last security inspection. The owner must enable protection in [Settings → Rules](https://github.com/fedefirefox/MathGate/settings/rules) and review collaborators in [Settings → Access](https://github.com/fedefirefox/MathGate/settings/access). The connected GitHub tool cannot manage those administrator-only settings. See [SECURITY.md](SECURITY.md) for exact steps.
+
+## App updates: one-tap workflow and stable signing
+
+Read [UPDATING.md](UPDATING.md) for the exact GitHub Secret setup and the unavoidable one-time Android signing transition. The app never performs a silent installation. A mismatch in the installed and downloaded APK signing certificates causes a clear error and **prevents an unsafe update attempt**.

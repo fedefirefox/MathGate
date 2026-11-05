@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.0 — Victory UI layout + in-app updater
+- Full aspect-ratio-preserving cat-meme display (no forced 255dp height or clipped caption).
+- Bottom Claim +5:00 and Leave actions pinned above Android 15/16 system navigation insets.
+- Official GitHub Release download from inside the app, including size/SHA-256 and APK signing identity validation.
+- Android System installer handoff with explicit user confirmation.
+- Permanent release signing workflow for a one-time owner-provided GitHub Actions Secret; no unsigned or throwaway-signed public releases.
+- CI smoke-tests the release signing configuration with a throwaway certificate.
+- In-place upgrades require a permanently stable APK signing identity; the initial transition from v0.6 needs one reinstall.
+- Preserves 20 minutes free, 5 minutes per solved question, the cat reward, and signed equation/meme updates.
+
 ## v0.6.0 — Signed data and security review
 - Owner-signed ECDSA P-256 manifest required for GitHub math and cat-meme updates.
 - SHA-256 integrity checks for all downloaded JSON and WebP assets.

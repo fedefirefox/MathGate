@@ -30,6 +30,22 @@ jobs:
         run: python3 tools/verify_assets.py
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
+      - name: Smoke-test stable release signing with a THROWAWAY CI key
+        run: |
+          set -euo pipefail
+          keytool -genkeypair -alias mathgate-ci \
+            -keyalg RSA -keysize 2048 -validity 1 -storetype PKCS12 \
+            -keystore "$RUNNER_TEMP/throwaway-ci.p12" \
+            -storepass 'test-only-ci-key' -keypass 'test-only-ci-key' \
+            -dname 'CN=CI signing smoke test' -noprompt
+          export MATHGATE_KEYSTORE_PATH="$RUNNER_TEMP/throwaway-ci.p12"
+          export MATHGATE_STORE_PASSWORD='test-only-ci-key'
+          export MATHGATE_KEY_PASSWORD='test-only-ci-key'
+          export MATHGATE_KEY_ALIAS='mathgate-ci'
+          gradle --no-daemon assembleRelease
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify \
+            app/build/outputs/apk/release/app-release.apk
+          # This throwaway-signed APK is NOT uploaded or published.
       - uses: actions/upload-artifact@v4
         with:
           name: MathGate-debug-apk

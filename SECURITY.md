@@ -65,3 +65,9 @@ The private key is essential. Losing it means new remote library revisions canno
 ## Reporting a vulnerability
 
 Avoid publishing secrets or private data in public issues. In particular, do not upload the private signing key, keystores, screenshots containing credentials, or API keys. Use GitHub's private vulnerability reporting feature if the repository owner has enabled it.
+
+## In-app APK updater, v0.7+
+
+`AppUpdater.kt` only accepts the exact `MathGate-vX.Y.Z.apk` asset from the official GitHub release path, verifies SHA-256 and package identity, checks the downloaded APK version is newer and requires the Android signing certificates to match the currently installed app. It uses a private file URI via AndroidX FileProvider to hand the APK to the system installer. Users must explicitly approve installation and may need to authorize install-from-this-source once; MathGate does not bypass Android protections.
+
+**Permanent signing setup:** a release-signing PKCS#12 identity is held in the `MATHGATE_SIGNING_BUNDLE_BASE64` repository Actions Secret (configured by the owner; not stored in source). The publish workflow skips a release if the secret is missing. CI uses a different throwaway certificate only to verify the release build steps; the throwaway-signed APK is never published. The old v0.6 CI debug certificate is not available, so the first stable-signed APK cannot be installed over it. See [UPDATING.md](UPDATING.md).

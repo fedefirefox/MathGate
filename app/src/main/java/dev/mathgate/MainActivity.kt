@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.net.Uri
 import android.view.accessibility.AccessibilityManager
 import android.widget.LinearLayout
 
@@ -12,6 +13,7 @@ class MainActivity : Activity() {
     private var feedback: String? = null
     private var releaseLink: String? = null
     private var isUpdating = false
+    private var pendingApk: AppUpdater.Prepared? = null
     private var previewId: String? = null
     private var previewLevel: String? = null
     private var activeScroll: android.widget.ScrollView? = null
@@ -43,6 +45,16 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         render()
+        val waiting = pendingApk
+        if (waiting != null && AppUpdater.mayInstall(this)) {
+            pendingApk = null
+            try {
+                AppUpdater.launchInstaller(this, waiting)
+            } catch (error: Exception) {
+                feedback = "Android installer could not open: " + error.message
+                render()
+            }
+        }
     }
 
     private fun accessibilityEnabled(): Boolean {
@@ -85,14 +97,31 @@ class MainActivity : Activity() {
     private fun checkApplication() {
         if (isUpdating) return
         isUpdating = true
-        feedback = "Checking GitHub app releases…"
-        render()
-        ReleaseChecker.check(this) { result, link ->
+        feedback = "Checking GitHub for a compatible, signed MathGate update…"
+        render(preserveScroll = true)
+        AppUpdater.downloadNewest(this) { result ->
             runOnUiThread {
                 isUpdating = false
-                feedback = result
-                releaseLink = link
-                render()
+                result.onSuccess { prepared ->
+                    feedback = "Downloaded and verified " + prepared.tag +
+                        ". Android will request your approval to update."
+                    if (AppUpdater.mayInstall(this)) {
+                        try {
+                            AppUpdater.launchInstaller(this, prepared)
+                        } catch (error: Exception) {
+                            feedback = "Installer error: " + (error.message ?: "unknown")
+                        }
+                    } else {
+                        pendingApk = prepared
+                        feedback = "Please allow MathGate to install updates from this source. " +
+                            "Return to MathGate; Android will then open the installer."
+                        AppUpdater.openInstallPermission(this)
+                    }
+                }.onFailure { error ->
+                    feedback = error.message ?: "Update could not be verified"
+                    releaseLink = "https://github.com/fedefirefox/MathGate/releases"
+                }
+                render(preserveScroll = true)
             }
         }
     }
@@ -237,7 +266,7 @@ class MainActivity : Activity() {
             "↻  Download AI cat memes from GitHub",
             GateUi.TEAL, GateUi.WHITE) { checkCatMemes() }, bottom = 8)
         GateUi.add(root, GateUi.button(this,
-            "Check for MathGate app update", GateUi.SOFT, GateUi.INK) {
+            "Update MathGate directly from GitHub", GateUi.SOFT, GateUi.INK) {
             checkApplication()
         }, bottom = 8)
         feedback?.let {

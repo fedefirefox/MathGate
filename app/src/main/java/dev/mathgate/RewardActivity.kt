@@ -2,16 +2,23 @@ package dev.mathgate
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Celebratory, full-screen reward dialog shown AFTER a correct answer and
- * BEFORE the actual five-minute Instagram allowance is credited.
+ * Full-size meme in a scrollable content area, plus a fixed bottom claim action.
+ * Android 15+ navigation/status bar insets are applied to the outer container.
+ * This is a REAL screen-layout fix, not a modification of the meme image.
  */
 class RewardActivity : Activity() {
     companion object {
@@ -38,23 +45,59 @@ class RewardActivity : Activity() {
     }
 
     private fun draw() {
-        val screen = GateUi.root(this)
-        setContentView(GateUi.scroll(this, screen))
+        val surface = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(GateUi.BG)
+        }
+        setContentView(surface)
 
-        GateUi.add(screen, GateUi.text(this,
-            "●   MATHGATE   /   VICTORY", 13f, GateUi.TEAL, true),
-            bottom = 12)
+        // Samsung One UI on Android 15/16 draws app content behind the
+        // three-button navigation area. Protect both the status and nav bars.
+        surface.setOnApplyWindowInsetsListener { view, insets ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val safe = insets.getInsets(
+                    WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+                )
+                view.setPadding(0, safe.top, 0, safe.bottom)
+            } else {
+                @Suppress("DEPRECATION")
+                view.setPadding(
+                    0, insets.systemWindowInsetTop, 0,
+                    insets.systemWindowInsetBottom
+                )
+            }
+            insets
+        }
+        surface.requestApplyInsets()
+
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                GateUi.dp(this@RewardActivity, 24),
+                GateUi.dp(this@RewardActivity, 12),
+                GateUi.dp(this@RewardActivity, 24),
+                GateUi.dp(this@RewardActivity, 20)
+            )
+        }
+        val scroll = ScrollView(this).apply {
+            isFillViewport = false
+            clipToPadding = false
+            addView(content)
+        }
+        surface.addView(scroll, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
+        ))
+
+        GateUi.add(content, GateUi.text(this, "●   MATHGATE  /  VICTORY",
+            13f, GateUi.TEAL, true), bottom = 7)
         val title = GateUi.text(this, "CONGRATS! 🐾",
-            37f, GateUi.CORAL, true)
-        GateUi.add(screen, title, bottom = 5)
-        title.alpha = 0.3f
-        title.scaleX = 0.85f
-        title.scaleY = 0.85f
-        title.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(400L).start()
-
-        GateUi.add(screen, GateUi.text(this,
-            "Your answer is correct. The Feline Mathematics Council has issued its verdict.",
-            16f, GateUi.INK), bottom = 15)
+            33f, GateUi.CORAL, true)
+        GateUi.add(content, title, bottom = 4)
+        title.alpha = 0.1f
+        title.animate().alpha(1f).setDuration(300L).start()
+        GateUi.add(content, GateUi.text(this,
+            "Correct answer. The Feline Mathematics Council approves.",
+            15f, GateUi.INK), bottom = 13)
 
         val meme = CatMemeStore.daily(this)
         val card = GateUi.panel(this)
@@ -62,60 +105,68 @@ class RewardActivity : Activity() {
             "TODAY'S AI CAT MEME  ·  " +
                 LocalDate.now().format(DateTimeFormatter.ofPattern("MMM d", Locale.US))
                     .uppercase(Locale.US),
-            12f, GateUi.TEAL, true), bottom = 11)
+            12f, GateUi.TEAL, true), bottom = 9)
 
         val bitmap = CatMemeStore.bitmap(this, meme)
         if (bitmap != null) {
-            val artwork = ImageView(this).apply {
+            val image = ImageView(this).apply {
                 setImageBitmap(bitmap)
+                adjustViewBounds = true
                 scaleType = ImageView.ScaleType.FIT_CENTER
-                background = GateUi.shape(this@RewardActivity, GateUi.SOFT, 18)
-                clipToOutline = true
-                contentDescription = "AI-generated illustration of a cat celebrating a mathematics solution"
+                setBackgroundColor(GateUi.SOFT)
+                clipToOutline = false
+                contentDescription = "Entire mathematics cat meme; no cropping"
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             }
-            val aspect = bitmap.width.toFloat() / bitmap.height.toFloat()
-            val screenWidth = resources.displayMetrics.widthPixels -
-                GateUi.dp(this, 88)
-            val heightPx = (screenWidth / aspect).toInt()
-                .coerceIn(GateUi.dp(this, 155), GateUi.dp(this, 255))
-            card.addView(artwork, android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                heightPx
+            // Crucially: no hard-coded 255dp height or clamp. MATCH_PARENT
+            // width + WRAP_CONTENT height preserves the bitmap aspect ratio.
+            card.addView(image, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ))
         } else {
-            GateUi.add(card, GateUi.text(this, "🐈‍⬛ 📚 ✨",
-                46f, GateUi.TEAL, true), bottom = 9)
+            GateUi.add(card, GateUi.text(this, "🐈  ∫dx  ✓",
+                39f, GateUi.TEAL, true), bottom = 10)
         }
 
         GateUi.add(card, GateUi.text(this,
             meme.title.uppercase(Locale.US),
-            21f, GateUi.INK, true), top = 15, bottom = 6)
-        GateUi.add(card, GateUi.text(this,
-            meme.message, 15f, GateUi.MUTED), bottom = 12)
-        GateUi.add(screen, card, bottom = 16)
+            19f, GateUi.INK, true), top = 12, bottom = 4)
+        GateUi.add(card, GateUi.text(this, meme.message,
+            14f, GateUi.MUTED), bottom = 9)
+        GateUi.add(content, card, bottom = 12)
 
         val reward = GateUi.panel(this, true)
         GateUi.add(reward, GateUi.text(this,
-            "REWARD AWAITING CONFIRMATION",
-            12f, GateUi.LIME, true), bottom = 5)
+            "REWARD READY  ·  NOT YET CREDITED",
+            12f, GateUi.LIME, true), bottom = 3)
         GateUi.add(reward, GateUi.text(this,
-            "+05:00  INSTAGRAM TIME",
-            27f, GateUi.WHITE, true))
-        GateUi.add(reward, GateUi.text(this,
-            "These minutes have NOT been added yet. Claim to unlock.",
-            13f, GateUi.WHITE))
-        GateUi.add(screen, reward, bottom = 13)
+            "+05:00 INSTAGRAM TIME", 23f, GateUi.WHITE, true))
+        GateUi.add(content, reward, bottom = 8)
 
-        GateUi.add(screen, GateUi.button(this,
+        // Pinned footer is always outside the scrollable body. Its bottom is
+        // above the navigation inset, regardless of the length of the meme.
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                GateUi.dp(this@RewardActivity, 24),
+                GateUi.dp(this@RewardActivity, 8),
+                GateUi.dp(this@RewardActivity, 24),
+                GateUi.dp(this@RewardActivity, 10)
+            )
+            setBackgroundColor(GateUi.BG)
+            elevation = GateUi.dp(this@RewardActivity, 8).toFloat()
+        }
+        GateUi.add(footer, GateUi.button(this,
             "CLAIM +5:00  ·  OPEN INSTAGRAM",
-            GateUi.LIME, GateUi.INK) { claim() }, bottom = 10)
-        GateUi.add(screen, GateUi.button(this,
+            GateUi.LIME, GateUi.INK) { claim() }, bottom = 5)
+        GateUi.add(footer, GateUi.button(this,
             "Leave without claiming",
-            GateUi.SOFT, GateUi.INK) { leave() }, bottom = 10)
-        GateUi.add(screen, GateUi.text(this,
-            "No additional time is credited until you claim. " +
-                "The same reward will be waiting if you leave and return today.",
-            12f, GateUi.MUTED))
+            GateUi.SOFT, GateUi.INK) { leave() })
+        surface.addView(footer, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
     }
 
     private fun claim() {
@@ -133,9 +184,7 @@ class RewardActivity : Activity() {
                 Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             startActivity(launch)
             finish()
-        } else {
-            leave()
-        }
+        } else leave()
     }
 
     private fun leave() {
