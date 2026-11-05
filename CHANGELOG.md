@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.0
+- Added a **Congrats!** reward Activity between a correct answer and the +5-minute Instagram credit.
+- Illustrated daily AI-cat meme and 16 playful captions, rotating by local day.
+- No award is credited until **Claim +5:00 · Open Instagram** is tapped. Pending rewards persist until the day changes, and are single-use.
+- Added versioned GitHub-updatable cat meme catalogue and image assets, with offline fallback and size-checked downloads.
+- Added **Download AI cat memes from GitHub** button.
+- Added cat-meme catalogue validation in CI.
+- Preserved the 20-minute Instagram allowance, difficulty selector, 54-problem bank, and GitHub equation updates.
+- Cat images are generated in advance; **daily automated live image generation is not enabled**.
+
 ## v0.4.0
 - Added practice-preview **Show another equation** refresh. Each tap shows a different exercise from the selected difficulty without revealing the answer.
 - The preview refresh does not replace or bypass a live Instagram unlock challenge.

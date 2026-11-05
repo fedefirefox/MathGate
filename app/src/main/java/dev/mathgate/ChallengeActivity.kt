@@ -16,7 +16,19 @@ class ChallengeActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        draw()
+        val pending = GateState.pendingReward(this)
+        if (pending != null) {
+            showReward(pending)
+        } else {
+            draw()
+        }
+    }
+
+    private fun showReward(ticket: String) {
+        startActivity(Intent(this, RewardActivity::class.java).apply {
+            putExtra(RewardActivity.EXTRA_TICKET, ticket)
+        })
+        finish()
     }
 
     private fun draw() {
@@ -80,7 +92,8 @@ class ChallengeActivity : Activity() {
             GateUi.add(card, GateUi.button(this, "VERIFY ANSWER →",
                 GateUi.LIME, GateUi.INK) {
                 if (question.check(entry.text.toString())) {
-                    if (GateState.earnFiveMinutes(this)) openInstagram() else draw()
+                    val ticket = GateState.offerReward(this, question.id)
+                    if (ticket != null) showReward(ticket) else draw()
                 } else {
                     message.text = "Not correct. Hint: " + question.hint
                     message.setTextColor(GateUi.CORAL)

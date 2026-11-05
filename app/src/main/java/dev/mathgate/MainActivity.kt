@@ -68,6 +68,20 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun checkCatMemes() {
+        if (isUpdating) return
+        isUpdating = true
+        feedback = "Checking today's cat meme pack on GitHub…"
+        render()
+        CatMemeStore.checkForUpdates(this) { result ->
+            runOnUiThread {
+                isUpdating = false
+                feedback = result
+                render()
+            }
+        }
+    }
+
     private fun checkApplication() {
         if (isUpdating) return
         isUpdating = true
@@ -219,6 +233,9 @@ class MainActivity : Activity() {
         GateUi.add(root, GateUi.button(this,
             "↻  Download new equations from GitHub",
             GateUi.TEAL, GateUi.WHITE) { checkQuestions() }, bottom = 8)
+        GateUi.add(root, GateUi.button(this,
+            "↻  Download AI cat memes from GitHub",
+            GateUi.TEAL, GateUi.WHITE) { checkCatMemes() }, bottom = 8)
         GateUi.add(root, GateUi.button(this,
             "Check for MathGate app update", GateUi.SOFT, GateUi.INK) {
             checkApplication()

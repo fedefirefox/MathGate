@@ -4,7 +4,15 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.4.0?
+## What's in version 0.5.0?
+
+**New reward flow:** after submitting the correct answer, MathGate shows a *Congrats!* celebration, an AI-created cat illustration, a silly daily caption, and a **Claim +5:00 · Open Instagram** button. The five-minute allowance is awarded **only when that button is tapped**. Leaving the reward screen without claiming leaves a pending reward for the same day; it cannot be claimed twice. The daily Instagram time rule is unchanged.
+
+The APK bundles **two compact AI-generated cat illustrations**, paired with **16 different AI-written meme captions**. A deterministic daily selection keeps the same joke for one local calendar day; the joke changes the next day. The cat-meme catalogue is a separate versioned file on GitHub and the in-app **Download AI cat memes from GitHub** button can update captions and download additional WebP pictures without reinstalling the app. The bundled offline memes are always available.
+
+**AI-generation limitation:** the app does not run an image generator on the phone and does not generate a new image from scratch each morning. Daily generation of entirely new images would require an external image-generation provider and configured credentials; this has **not** been enabled. The current artwork was AI-generated in advance and rotates by day.
+
+
 
 - **54 curated problems:** 18 Foundation, 18 Standard, 18 Advanced. The previous eight coefficient-randomized templates remain as emergency fallback.
 - Topics include **Cauchy's formula and residue theorem** (simple, repeated and higher-order poles), **PDEs** (heat, wave, transport, Laplace, Poisson, inviscid Burgers), vector calculus, ODEs, integration, Fourier methods, optimization and series.
@@ -16,11 +24,17 @@ MathGate is a free, public-source Android app. It uses a light graphite, electri
 - **Download new equations from GitHub** in the app; new questions do not require a new APK.
 - **Check for MathGate app updates** through GitHub Releases. Android must still approve APK installation.
 
+## Meme catalogue and GitHub updates
+
+The editable [cat meme catalogue](app/src/main/assets/cat_memes.json) contains entries with `id`, `image`, `title`, and `message`. To add a new picture, commit a WebP file named `cat_NN.webp` under [app/src/main/assets/memes](app/src/main/assets/memes) and reference its exact filename in the catalogue. Increment top-level `revision` before committing. In the app, select **Download AI cat memes from GitHub** to retrieve the new data and images. Only the project's fixed GitHub path is accepted. Images are type-, dimensions-, and size-checked; no remote code is executed.
+
+A meme is selected based on the local day and remains stable for that day, even if the catalogue is refreshed. The library currently contains **16 daily captions and 2 images**. To add a genuinely new AI-generated image every day automatically, a scheduled generation workflow and private provider credentials would be needed.
+
 ## Instagram rule
 
 1. Get **20 minutes** of Instagram foreground usage per local calendar day.
 2. Once exhausted, opening Instagram triggers a full-screen MathGate challenge.
-3. One correct typed result earns **five more minutes** of actual Instagram time.
+3. One correct typed result brings up a celebratory reward screen. **Only tapping Claim +5:00 grants the five-minute extension**; the cat meme itself cannot be skipped to grant time.
 4. Repeat whenever your earned minutes expire; there is no arbitrary maximum number of correct unlocks.
 5. Bonus minutes persist across Instagram sessions today and reset at local midnight.
 6. There are **no in-app skip, pause, quota-reset or disable controls**.
@@ -89,4 +103,4 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.4.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.5.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
