@@ -1,0 +1,51 @@
+name: Publish MathGate Android v0.9.1 (correct Samsung onboarding sequence)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-android-v0.9.yml'
+  workflow_dispatch:
+jobs:
+  publish:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve tested Android v0.9.1 APK
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mathgate-v09
+          gh run download 42130212585 --repo fedefirefox/MathGate \
+            --name MathGate-debug-apk --dir /tmp/mathgate-v09
+          test -s /tmp/mathgate-v09/app-debug.apk
+          cp /tmp/mathgate-v09/app-debug.apk MathGate-v0.9.1.apk
+          sha256sum MathGate-v0.9.1.apk > MathGate-v0.9.1.sha256
+          file MathGate-v0.9.1.apk
+          test "$(stat -c%s MathGate-v0.9.1.apk)" -gt 1000000
+      - name: Publish release APK and ZIP
+        run: |
+          set -euo pipefail
+          zip -9 MathGate-v0.9.1.zip MathGate-v0.9.1.apk MathGate-v0.9.1.sha256
+          gh release create v0.9.1 \
+            MathGate-v0.9.1.apk \
+            MathGate-v0.9.1.sha256 \
+            MathGate-v0.9.1.zip \
+            --repo fedefirefox/MathGate \
+            --target f030240c1feca57eb0b95e0c8a42b25bb3fdb0d9 \
+            --title 'MathGate Android v0.9.1 — No repeating math challenges' \
+            --notes 'Android update: corrected Samsung first-time setup order. Usage Access → Accessibility first attempt (trigger the restricted-settings warning) → MathGate App info / three dots / Allow restricted settings → Accessibility again and enable the guard. App info step only appears after opening the Accessibility page; the wizard checks the true permissions. No changes to the 20-minute limit, +5-minute reward or non-repeating math questions. IMPORTANT: development-signed APK; Android may require uninstalling an older build because of signing certificates. No silent bypass.'
+      - name: Verify public APK download checksum
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-delay 2 \
+            --output downloaded.apk \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.9.1/MathGate-v0.9.1.apk
+          EXPECTED="$(cut -d' ' -f1 MathGate-v0.9.1.sha256)"
+          ACTUAL="$(sha256sum downloaded.apk | cut -d' ' -f1)"
+          [ "$EXPECTED" = "$ACTUAL" ]
+          echo "Public APK verified: $ACTUAL"
