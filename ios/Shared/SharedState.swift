@@ -1,5 +1,6 @@
 import Foundation
 import FamilyControls
+import ManagedSettings
 
 enum MathGateShared {
     static let group = "group.dev.mathgate.shared"
