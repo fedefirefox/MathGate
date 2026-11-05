@@ -1,0 +1,49 @@
+name: Publish MathGate Android v0.8.0 (guided setup)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-android-v0.8.yml'
+  workflow_dispatch:
+jobs:
+  publish:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve successfully compiled Android v0.8.0 APK
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mathgate-apk
+          gh run download 42102867491 --repo fedefirefox/MathGate \
+            --name MathGate-debug-apk --dir /tmp/mathgate-apk
+          test -s /tmp/mathgate-apk/app-debug.apk
+          cp /tmp/mathgate-apk/app-debug.apk MathGate-v0.8.0.apk
+          sha256sum MathGate-v0.8.0.apk > MathGate-v0.8.0.sha256
+          file MathGate-v0.8.0.apk
+      - name: Publish release and ZIP download fallback
+        run: |
+          set -euo pipefail
+          zip -9 MathGate-v0.8.0.zip MathGate-v0.8.0.apk MathGate-v0.8.0.sha256
+          gh release create v0.8.0 \
+            MathGate-v0.8.0.apk \
+            MathGate-v0.8.0.sha256 \
+            MathGate-v0.8.0.zip \
+            --repo fedefirefox/MathGate \
+            --target 798d678e8edd0a4f8a553fb6cb9c37dedb8ceb24 \
+            --title 'MathGate Android v0.8.0 — guided first-time setup' \
+            --notes 'Android-only development-signed APK. New guided Samsung setup checklist: Usage Access, MathGate App info → Allow restricted settings, and Accessibility Guard; verifies both permissions. 20 minutes base daily, +5 for correct math. No iPhone IPA is included: iOS requires Apple Family Controls entitlement, Xcode signing, and TestFlight. The APK is DEBUG-SIGNED and may require uninstalling a previous version due to signing mismatch.'
+      - name: Verify anonymous GitHub release download and SHA-256
+        run: |
+          curl --fail --location --retry 4 \
+            -o public.apk \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.8.0/MathGate-v0.8.0.apk
+          expected=$(cut -d' ' -f1 MathGate-v0.8.0.sha256)
+          actual=$(sha256sum public.apk | cut -d' ' -f1)
+          test "$expected" = "$actual"
+          echo "Verified public release download: $actual"
