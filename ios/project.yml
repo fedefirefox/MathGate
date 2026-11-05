@@ -1,0 +1,47 @@
+name: MathGateIOS
+options:
+  bundleIdPrefix: dev.mathgate
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    IPHONEOS_DEPLOYMENT_TARGET: 17.0
+    TARGETED_DEVICE_FAMILY: "1,2"
+targets:
+  MathGateIOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: App
+      - path: Shared
+      - path: Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.mathgate.ios
+        CODE_SIGN_ENTITLEMENTS: App/MathGate.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MathGate
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    entitlements:
+      path: App/MathGate.entitlements
+    dependencies:
+      - target: MathGateMonitor
+        embed: true
+  MathGateMonitor:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Monitor
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.mathgate.ios.monitor
+        CODE_SIGN_ENTITLEMENTS: Monitor/Monitor.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Monitor/Info.plist
+        APPLICATION_EXTENSION_API_ONLY: YES
+    entitlements:
+      path: Monitor/Monitor.entitlements

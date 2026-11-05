@@ -44,6 +44,11 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        if (!GateState.hasUsageAccess(this) || !accessibilityEnabled()) {
+            startActivity(Intent(this, SetupActivity::class.java))
+            finish()
+            return
+        }
         render()
         val waiting = pendingApk
         if (waiting != null && AppUpdater.mayInstall(this)) {
@@ -166,6 +171,11 @@ class MainActivity : Activity() {
                 " remaining · " + bonus + " equations solved",
             14f, GateUi.WHITE))
         GateUi.add(root, summary, bottom = 20)
+
+        GateUi.add(root, GateUi.button(this,
+            "View permission setup checklist", GateUi.SOFT, GateUi.INK) {
+            startActivity(Intent(this, SetupActivity::class.java))
+        }, bottom = 12)
 
         val active = usageOK && guardOK
         val status = GateUi.panel(this)

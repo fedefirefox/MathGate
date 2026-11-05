@@ -1,0 +1,547 @@
+{
+  "schema_version": 1,
+  "revision": 2,
+  "description": "54 curated problems: balanced university Analysis I/II, standard integrals, PDEs and complex analysis. GitHub-downloadable without an app reinstall.",
+  "problems": [
+    {
+      "id": "F01",
+      "level": "foundation",
+      "topic": "Complex analysis · Cauchy integral",
+      "prompt": "Compute the contour integral normalized by 2πi. The contour is counterclockwise.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=3}\\frac{z^2}{z-1}\\,dz",
+      "answer": 1,
+      "tolerance": 0.01,
+      "hint": "Cauchy's integral formula applies to z² at z=1."
+    },
+    {
+      "id": "F02",
+      "level": "foundation",
+      "topic": "Residue theorem · Simple pole",
+      "prompt": "Evaluate the normalized counterclockwise contour integral.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=3}\\frac{z}{z-2}\\,dz",
+      "answer": 2,
+      "tolerance": 0.01,
+      "hint": "Find the residue at z=2."
+    },
+    {
+      "id": "F03",
+      "level": "foundation",
+      "topic": "Improper integrals · Gamma function",
+      "prompt": "Calculate the integral as a decimal.",
+      "latex": "\\int_{0}^{\\infty}t^{2}e^{-2t}\\,dt",
+      "answer": 0.25,
+      "tolerance": 0.01,
+      "hint": "Use Γ(3)=2! and the exponential-integral identity."
+    },
+    {
+      "id": "F04",
+      "level": "foundation",
+      "topic": "PDE · Heat equation",
+      "prompt": "The heat equation has Dirichlet boundaries at x=0 and π. Find the indicated value.",
+      "latex": "u_t=2u_{xx},\\quad u(x,0)=\\sin(3x),\\quad u(\\frac{\\pi}{2},\\frac{1}{6})=?",
+      "answer": -0.049787068367863944,
+      "tolerance": 0.01,
+      "hint": "A sine eigenmode decays as exp(−κn²t)."
+    },
+    {
+      "id": "F05",
+      "level": "foundation",
+      "topic": "PDE · Wave equation",
+      "prompt": "Solve the Cauchy problem on the whole real line at the indicated point.",
+      "latex": "u_{tt}=4u_{xx},\\quad u(x,0)=\\cos(x),\\quad u_t(x,0)=0,\\quad u(0,1)=?",
+      "answer": -0.4161468365471424,
+      "tolerance": 0.01,
+      "hint": "A cosine mode oscillates with frequency c·k."
+    },
+    {
+      "id": "F06",
+      "level": "foundation",
+      "topic": "PDE · Transport",
+      "prompt": "Use the method of characteristics to find the requested value.",
+      "latex": "u_t+2u_x=0,\\quad u(x,0)=x^2+1,\\quad u(3,1)=?",
+      "answer": 2,
+      "tolerance": 0.01,
+      "hint": "Along x−2t=const, u stays constant."
+    },
+    {
+      "id": "F07",
+      "level": "foundation",
+      "topic": "Vector calculus · Divergence",
+      "prompt": "Compute the outward flux through the sphere of radius 2.",
+      "latex": "\\iint_{x^2+y^2+z^2=4}\\vec{r}\\cdot\\vec{n}\\,dS",
+      "answer": 100.53096491487338,
+      "tolerance": 0.01,
+      "hint": "Use the divergence theorem: div(r)=3."
+    },
+    {
+      "id": "F08",
+      "level": "foundation",
+      "topic": "PDE · Laplace equation",
+      "prompt": "A harmonic function on the unit disk has the specified boundary value. Find u(1/2,0) in polar coordinates.",
+      "latex": "\\nabla^2u=0,\\quad u(1,\\theta)=\\cos(2\\theta),\\quad u(\\frac{1}{2},0)=?",
+      "answer": 0.25,
+      "tolerance": 0.01,
+      "hint": "The regular harmonic extension of cos(nθ) is rⁿcos(nθ)."
+    },
+    {
+      "id": "F09",
+      "level": "foundation",
+      "topic": "Analysis · Series",
+      "prompt": "Evaluate the infinite sum.",
+      "latex": "\\sum_{n=1}^{\\infty}\\frac{n}{3^n}",
+      "answer": 0.75,
+      "tolerance": 0.01,
+      "hint": "Differentiate Σxⁿ=1/(1−x)."
+    },
+    {
+      "id": "F10",
+      "level": "foundation",
+      "topic": "Multivariable · Minimization",
+      "prompt": "Find the global minimum value over the entire plane.",
+      "latex": "\\min_{(x,y)\\in\\mathbb{R}^{2}}\\left(x^2+2y^2-2x-8y\\right)",
+      "answer": -9,
+      "tolerance": 0.01,
+      "hint": "Complete the square in both variables."
+    },
+    {
+      "id": "F11",
+      "level": "foundation",
+      "topic": "Residue theorem · Double pole",
+      "prompt": "Evaluate the normalized counterclockwise contour integral.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z-1|=1}\\frac{e^z}{(z-1)^2}\\,dz",
+      "answer": 2.718281828459045,
+      "tolerance": 0.01,
+      "hint": "Use Cauchy's derivative formula."
+    },
+    {
+      "id": "F12",
+      "level": "foundation",
+      "topic": "PDE · Heat eigenmode",
+      "prompt": "Zero Dirichlet boundary conditions apply on 0<x<π. Find the specified value.",
+      "latex": "u_t=3u_{xx},\\quad u(x,0)=\\sin(x),\\quad u(\\frac{\\pi}{2},\\frac{1}{3})=?",
+      "answer": 0.36787944117144233,
+      "tolerance": 0.01,
+      "hint": "Separate variables and track the Fourier-mode decay."
+    },
+    {
+      "id": "S01",
+      "level": "standard",
+      "topic": "Residue theorem · Two poles",
+      "prompt": "Both enclosed poles contribute; calculate the normalized contour integral.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=2}\\frac{e^z}{z(z-1)}\\,dz",
+      "answer": 1.718281828459045,
+      "tolerance": 0.01,
+      "hint": "Compute the residues at z=0 and z=1, then add."
+    },
+    {
+      "id": "S02",
+      "level": "standard",
+      "topic": "Residue theorem · Laurent series",
+      "prompt": "Find the residue at the origin.",
+      "latex": "\\operatorname{Res}_{z=0}\\frac{e^z-1-z}{z^3}",
+      "answer": 0.5,
+      "tolerance": 0.01,
+      "hint": "Find the z² coefficient in the numerator."
+    },
+    {
+      "id": "S03",
+      "level": "standard",
+      "topic": "PDE · Fourier heat solution",
+      "prompt": "Solve the heat equation on (0,π) with zero Dirichlet boundaries and evaluate the solution.",
+      "latex": "u_t=u_{xx},\\quad u(x,0)=\\sin x+2\\sin(2x),\\quad u(\\frac{\\pi}{3},\\ln 2)=?",
+      "answer": 0.5412658773652741,
+      "tolerance": 0.01,
+      "hint": "Each eigenmode decays with its own n² rate."
+    },
+    {
+      "id": "S04",
+      "level": "standard",
+      "topic": "PDE · Characteristics",
+      "prompt": "Compute the transported Gaussian at the given point.",
+      "latex": "u_t+3u_x=0,\\quad u(x,0)=e^{-x^2},\\quad u(4,1)=?",
+      "answer": 0.36787944117144233,
+      "tolerance": 0.01,
+      "hint": "The solution is f(x−3t)."
+    },
+    {
+      "id": "S05",
+      "level": "standard",
+      "topic": "PDE · Harmonic extension",
+      "prompt": "Solve the Laplace equation on the upper half-plane for the given boundary profile, requiring boundedness as y→∞.",
+      "latex": "u_{xx}+u_{yy}=0,\\quad u(x,0)=\\sin(2x),\\quad u(\\frac{\\pi}{4},\\frac12)=?",
+      "answer": 0.36787944117144233,
+      "tolerance": 0.01,
+      "hint": "The harmonic extension of sin(kx) is e^(−ky)sin(kx)."
+    },
+    {
+      "id": "S06",
+      "level": "standard",
+      "topic": "PDE · Wave eigenmode",
+      "prompt": "For the wave equation on the whole line, find the specified value.",
+      "latex": "u_{tt}=9u_{xx},\\quad u(x,0)=\\sin(2x),\\quad u_t(x,0)=0,\\quad u(\\frac{\\pi}{4},\\frac{\\pi}{18})=?",
+      "answer": 0.5,
+      "tolerance": 0.01,
+      "hint": "The time frequency is c·k=6."
+    },
+    {
+      "id": "S07",
+      "level": "standard",
+      "topic": "Multivariable · Triple integral",
+      "prompt": "Integrate squared radius throughout the ball of radius 2.",
+      "latex": "\\iiint_{x^2+y^2+z^2\\le4}(x^2+y^2+z^2)\\,dV",
+      "answer": 80.4247719318987,
+      "tolerance": 0.01,
+      "hint": "Use spherical coordinates; account for the Jacobian r²sinθ."
+    },
+    {
+      "id": "S08",
+      "level": "standard",
+      "topic": "Residue theorem · Conjugate poles",
+      "prompt": "Evaluate the normalized integral around |z|=2.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=2}\\frac{z}{z^2+1}\\,dz",
+      "answer": 1,
+      "tolerance": 0.01,
+      "hint": "There are two simple poles at ±i."
+    },
+    {
+      "id": "S09",
+      "level": "standard",
+      "topic": "Residue theorem · Roots of unity",
+      "prompt": "Calculate the normalized integral around |z|=2.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=2}\\frac{z^2}{z^3-1}\\,dz",
+      "answer": 1,
+      "tolerance": 0.01,
+      "hint": "Each third root of unity contributes the same residue."
+    },
+    {
+      "id": "S10",
+      "level": "standard",
+      "topic": "PDE · Poisson boundary value",
+      "prompt": "Solve this 1D boundary-value problem and evaluate at x=1/4.",
+      "latex": "-u_{xx}=2,\\quad u(0)=u(1)=0,\\quad u(\\frac14)=?",
+      "answer": 0.1875,
+      "tolerance": 0.01,
+      "hint": "Integrate twice and apply the two boundary conditions."
+    },
+    {
+      "id": "S11",
+      "level": "standard",
+      "topic": "Vector calculus · Green theorem",
+      "prompt": "Evaluate the counterclockwise line integral around the ellipse.",
+      "latex": "\\oint_{x^2/4+y^2/9=1}(-y\\,dx+x\\,dy)",
+      "answer": 37.69911184307752,
+      "tolerance": 0.01,
+      "hint": "Green's theorem reduces this to twice the ellipse area."
+    },
+    {
+      "id": "S12",
+      "level": "standard",
+      "topic": "ODE · Resonance",
+      "prompt": "Solve the inhomogeneous second-order ODE with initial values and report y(1).",
+      "latex": "y''-3y'+2y=e^t,\\quad y(0)=y'(0)=0,\\quad y(1)=?",
+      "answer": 1.9524924420125602,
+      "tolerance": 0.01,
+      "hint": "The forcing resonates with the homogeneous e^t mode."
+    },
+    {
+      "id": "A01",
+      "level": "advanced",
+      "topic": "Residue theorem · Higher-order pole",
+      "prompt": "Evaluate the residue of the integrand at z=0.",
+      "latex": "\\operatorname{Res}_{z=0}\\frac{e^{2z}}{z^3}",
+      "answer": 2,
+      "tolerance": 0.01,
+      "hint": "Use the coefficient of z² in the Taylor series of e^(2z)."
+    },
+    {
+      "id": "A02",
+      "level": "advanced",
+      "topic": "Residue theorem · Derivative formula",
+      "prompt": "Compute the normalized counterclockwise integral.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=3}\\frac{z^2e^z}{(z-1)^2}\\,dz",
+      "answer": 8.154845485377136,
+      "tolerance": 0.01,
+      "hint": "Differentiate z²e^z and evaluate at z=1."
+    },
+    {
+      "id": "A03",
+      "level": "advanced",
+      "topic": "Residue theorem · Excluded pole",
+      "prompt": "Calculate the normalized integral around |z|=2.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=2}\\frac{1}{(z-1)(z+1)(z-3)}\\,dz",
+      "answer": -0.125,
+      "tolerance": 0.01,
+      "hint": "Use the fact that the sum of all finite residues is zero, or compute the two enclosed ones."
+    },
+    {
+      "id": "A04",
+      "level": "advanced",
+      "topic": "Residue theorem · Four poles",
+      "prompt": "Compute the normalized integral around |z|=2.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=2}\\frac{z^3}{z^4-1}\\,dz",
+      "answer": 1,
+      "tolerance": 0.01,
+      "hint": "Each fourth root of unity gives a residue of 1/4."
+    },
+    {
+      "id": "A05",
+      "level": "advanced",
+      "topic": "PDE · Forced heat equation",
+      "prompt": "Zero Dirichlet boundaries on 0<x<π; initially u=0. Calculate the result.",
+      "latex": "u_t=2u_{xx}+3\\sin x,\\quad u(x,0)=0,\\quad u(\\frac{\\pi}{2},1)=?",
+      "answer": 1.296997075145081,
+      "tolerance": 0.01,
+      "hint": "Project the forcing onto the first sine eigenmode and solve its ODE."
+    },
+    {
+      "id": "A06",
+      "level": "advanced",
+      "topic": "PDE · Burgers equation",
+      "prompt": "Determine the first positive gradient-catastrophe time for this inviscid initial-value problem.",
+      "latex": "u_t+u\\,u_x=0,\\quad u(x,0)=-3\\sin x,\\quad t_{\\ast}=?",
+      "answer": 0.3333333333333333,
+      "tolerance": 0.01,
+      "hint": "Find the earliest loss of invertibility of x=ξ+t·u₀(ξ)."
+    },
+    {
+      "id": "A07",
+      "level": "advanced",
+      "topic": "PDE · Competing Fourier modes",
+      "prompt": "Zero Dirichlet conditions on (0,π). Find the requested heat-equation value.",
+      "latex": "u_t=u_{xx},\\quad u(x,0)=2\\sin x-\\sin(3x),\\quad u(\\frac{\\pi}{2},\\ln2)=?",
+      "answer": 1.001953125,
+      "tolerance": 0.01,
+      "hint": "Decay the two modes at n²=1 and 9, then evaluate their spatial signs."
+    },
+    {
+      "id": "A08",
+      "level": "advanced",
+      "topic": "PDE · Radial Laplace equation",
+      "prompt": "Find the bounded radial harmonic function on the annulus 1<r<5, with boundary values 0 and 1. Evaluate at r=2.",
+      "latex": "u_{rr}+\\frac1r u_r=0,\\quad u(1)=0,\\quad u(5)=1,\\quad u(2)=?",
+      "answer": 0.43067655807339306,
+      "tolerance": 0.01,
+      "hint": "In two dimensions, radial harmonic functions are A log r+B."
+    },
+    {
+      "id": "A09",
+      "level": "advanced",
+      "topic": "PDE · d'Alembert with velocity",
+      "prompt": "On the whole line, determine the value for the wave equation with initial velocity.",
+      "latex": "u_{tt}=4u_{xx},\\quad u(x,0)=0,\\quad u_t(x,0)=\\cos x,\\quad u(\\frac{\\pi}{3},\\frac{\\pi}{6})=?",
+      "answer": 0.21650635094610965,
+      "tolerance": 0.01,
+      "hint": "Integrate the initial velocity over [x−ct,x+ct], divided by 2c."
+    },
+    {
+      "id": "A10",
+      "level": "advanced",
+      "topic": "Residue theorem · Fourth-order pole",
+      "prompt": "Compute the complex residue at the origin.",
+      "latex": "\\operatorname{Res}_{z=0}\\frac{e^{3z}}{z^4}",
+      "answer": 4.5,
+      "tolerance": 0.01,
+      "hint": "The z³ Taylor coefficient of e^(3z) determines the residue."
+    },
+    {
+      "id": "A11",
+      "level": "advanced",
+      "topic": "Residue theorem · Second-order pole",
+      "prompt": "The contour is |z|=1/2 counterclockwise. Evaluate the normalized integral.",
+      "latex": "\\frac{1}{2\\pi i}\\oint_{|z|=1/2}\\frac{1+z}{z^2(z-1)}\\,dz",
+      "answer": -2,
+      "tolerance": 0.01,
+      "hint": "Find the derivative at 0 of (1+z)/(z−1)."
+    },
+    {
+      "id": "A12",
+      "level": "advanced",
+      "topic": "PDE · 2D Fourier heat mode",
+      "prompt": "Solve heat diffusion on the square (0,π)² with homogeneous Dirichlet boundary conditions.",
+      "latex": "u_t=u_{xx}+u_{yy},\\quad u(x,y,0)=\\sin(2x)\\sin(3y),\\quad u(\\frac{\\pi}{4},\\frac{\\pi}{6},0.1)=?",
+      "answer": 0.2725317930340126,
+      "tolerance": 0.01,
+      "hint": "The decay rate of a 2D sine eigenmode is kₓ²+kᵧ²."
+    },
+    {
+      "id": "F13",
+      "level": "foundation",
+      "topic": "Standard integrals · Polynomial",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}(3x^{2}+2x)\\,dx",
+      "answer": 2,
+      "tolerance": 0.008,
+      "hint": "Integrate each monomial using the power rule."
+    },
+    {
+      "id": "F14",
+      "level": "foundation",
+      "topic": "Standard integrals · Trigonometric",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\pi}\\sin x\\,dx",
+      "answer": 2,
+      "tolerance": 0.008,
+      "hint": "An antiderivative of sin(x) is −cos(x)."
+    },
+    {
+      "id": "F15",
+      "level": "foundation",
+      "topic": "Standard integrals · Substitution",
+      "prompt": "Evaluate the integral. Enter a decimal or expression in e.",
+      "latex": "\\int_{0}^{1}xe^{x^{2}}\\,dx",
+      "answer": 0.8591409142295225,
+      "tolerance": 0.008,
+      "hint": "Set u=x² and transform both integration limits."
+    },
+    {
+      "id": "F16",
+      "level": "foundation",
+      "topic": "Standard integrals · Trigonometric identity",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}\\sin^{2}x\\,dx",
+      "answer": 0.7853981633974483,
+      "tolerance": 0.008,
+      "hint": "Use the double-angle identity sin²x=(1−cos2x)/2."
+    },
+    {
+      "id": "F17",
+      "level": "foundation",
+      "topic": "Standard integrals · Logarithms",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{1}^{e}\\frac{\\ln x}{x}\\,dx",
+      "answer": 0.5,
+      "tolerance": 0.008,
+      "hint": "Substitute u=ln x."
+    },
+    {
+      "id": "F18",
+      "level": "foundation",
+      "topic": "Standard integrals · Powers",
+      "prompt": "Evaluate the integral.",
+      "latex": "\\int_{0}^{2}(x^{2}+1)\\,dx",
+      "answer": 4.666666666666667,
+      "tolerance": 0.008,
+      "hint": "Apply the fundamental theorem of calculus to x³/3 + x."
+    },
+    {
+      "id": "S13",
+      "level": "standard",
+      "topic": "Standard integrals · Integration by parts",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}x^{2}e^x\\,dx",
+      "answer": 0.7182818284590451,
+      "tolerance": 0.008,
+      "hint": "Integrate by parts twice."
+    },
+    {
+      "id": "S14",
+      "level": "standard",
+      "topic": "Standard integrals · Logarithm",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}\\ln(1+x)\\,dx",
+      "answer": 0.3862943611198906,
+      "tolerance": 0.008,
+      "hint": "Integrate by parts, using v=x+1."
+    },
+    {
+      "id": "S15",
+      "level": "standard",
+      "topic": "Standard integrals · Integration by parts",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}x\\sin x\\,dx",
+      "answer": 1,
+      "tolerance": 0.008,
+      "hint": "Choose u=x and dv=sin(x)dx."
+    },
+    {
+      "id": "S16",
+      "level": "standard",
+      "topic": "Standard integrals · Rational function",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}\\frac{1}{1+x^{2}}\\,dx",
+      "answer": 0.7853981633974483,
+      "tolerance": 0.008,
+      "hint": "Use the inverse tangent antiderivative."
+    },
+    {
+      "id": "S17",
+      "level": "standard",
+      "topic": "Standard integrals · Rational substitution",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}\\frac{x^{3}}{1+x^{2}}\\,dx",
+      "answer": 0.15342640972002736,
+      "tolerance": 0.008,
+      "hint": "First divide x³ by (1+x²), then integrate."
+    },
+    {
+      "id": "S18",
+      "level": "standard",
+      "topic": "Standard integrals · Trig reduction",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}\\sin^{3}x\\,dx",
+      "answer": 0.6666666666666666,
+      "tolerance": 0.008,
+      "hint": "Use sin³x=sin x(1−cos²x) and substitute u=cos x."
+    },
+    {
+      "id": "A13",
+      "level": "advanced",
+      "topic": "Improper integrals · Quartic denominator",
+      "prompt": "Evaluate this improper integral, by residues or an appropriate real-variable method.",
+      "latex": "\\int_{0}^{\\infty}\\frac{dx}{x^{4}+1}",
+      "answer": 1.1107207345395915,
+      "tolerance": 0.008,
+      "hint": "Use the known full-line quartic integral, or partial fractions with real quadratic factors."
+    },
+    {
+      "id": "A14",
+      "level": "advanced",
+      "topic": "Improper integrals · Logarithmic square",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{1}\\ln^{2}(x)\\,dx",
+      "answer": 2,
+      "tolerance": 0.008,
+      "hint": "Differentiate a parameter integral or use the Gamma-function identity."
+    },
+    {
+      "id": "A15",
+      "level": "advanced",
+      "topic": "Improper integrals · Log sine",
+      "prompt": "Evaluate the definite improper integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}\\ln(\\sin x)\\,dx",
+      "answer": -1.088793045151801,
+      "tolerance": 0.008,
+      "hint": "Use the reflection x↦π/2−x and the double-angle identity."
+    },
+    {
+      "id": "A16",
+      "level": "advanced",
+      "topic": "Improper integrals · Alternating series",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{1}\\frac{\\ln x}{1+x}\\,dx",
+      "answer": -0.8224670334241132,
+      "tolerance": 0.008,
+      "hint": "Expand 1/(1+x) as a power series on [0,1) and justify termwise integration."
+    },
+    {
+      "id": "A17",
+      "level": "advanced",
+      "topic": "Improper integrals · Laplace transform",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{\\infty}xe^{-x}\\sin x\\,dx",
+      "answer": 0.5,
+      "tolerance": 0.008,
+      "hint": "Take the imaginary part of ∫₀∞ x exp(−(1−i)x)dx."
+    },
+    {
+      "id": "A18",
+      "level": "advanced",
+      "topic": "Improper integrals · Bose integral",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{\\infty}\\frac{x^{3}}{e^{x}-1}\\,dx",
+      "answer": 6.493939402266828,
+      "tolerance": 0.008,
+      "hint": "Expand 1/(e^x−1) as a positive exponential series and use ζ(4)."
+    }
+  ]
+}

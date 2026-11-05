@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8.0 — Guided Samsung setup + iOS source preview
+- On first Android launch, automatically guide users through Usage Access, the separate App info / Allow restricted settings step, and Accessibility.
+- Verify actual permission states; include a repair path from the dashboard.
+- Add illustrated promotional mockup to GitHub README, explicitly labeled as a mockup.
+- Add initial native SwiftUI iPhone project using Apple Family Controls, Device Activity and Managed Settings, with Family Controls entitlements and device monitor extension.
+- iOS installation is **not yet available**: Apple distribution approval/signing/TestFlight are required.
+- Preserve Android's 20-minute allowance, +5-minute calculus reward, offline questions/memes, and app update controls.
+
 ## v0.7.0 — Victory UI layout + in-app updater
 - Full aspect-ratio-preserving cat-meme display (no forced 255dp height or clipped caption).
 - Bottom Claim +5:00 and Leave actions pinned above Android 15/16 system navigation insets.

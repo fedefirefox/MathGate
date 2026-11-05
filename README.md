@@ -1,10 +1,20 @@
 # MathGate 🧠🔒
 
+![MathGate illustrated Android walkthrough](assets/mathgate-android-preview.svg)
+
+*Illustrative product preview (not a photograph or an app-store screenshot).*
+
+
 **Instagram: 20 minutes daily, then +5 minutes for every solved university-level calculus problem.**
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.7.0?
+## What's in version 0.8.0?
+
+**Android first-install setup wizard:** If Usage Access or Accessibility permission isn't enabled, MathGate now opens a guided, progress-checked, three-step setup screen. Step 1 opens Android Usage Access; step 2 opens **MathGate App info** with explicit instructions for Samsung's hidden **⋮ → Allow restricted settings** control; step 3 opens Accessibility settings. The wizard verifies both actual Android permissions and only marks protection ready when both are enabled. The main dashboard has a **View permission setup checklist** link.
+
+**iPhone project:** a preliminary iOS app and Device Activity Monitor extension are now included under [ios/](ios/). These are **source code only**, not an installable iPhone app. iOS deployment requires Apple's Family Controls distribution entitlement, Apple Developer signing, physical-device testing and TestFlight/App Store distribution. See [ios/README.md](ios/README.md). Do not download the Android APK on iPhone.
+
 
 **Real Android layout repair:** the Victory screen now fits the cat meme at its full original aspect ratio, without a 255dp crop. Claim +5:00 and Leave are in a fixed bottom area above the Samsung navigation bar, including Android 15/16 system-bar insets.
 
@@ -120,7 +130,7 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.7.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.8.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
 
 ## Repository protection status
 

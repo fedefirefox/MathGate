@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-label="Illustrative MathGate Android preview showing daily usage limit, calculus unlock and cat reward">
+<defs>
+  <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#092b35"/><stop offset="1" stop-color="#154b51"/></linearGradient>
+  <linearGradient id="lime" x2="0" y2="1"><stop stop-color="#dfff72"/><stop offset="1" stop-color="#bdf040"/></linearGradient>
+</defs>
+<rect width="1200" height="650" rx="32" fill="url(#bg)"/>
+<text x="45" y="67" font-family="Arial,sans-serif" font-size="42" font-weight="800" fill="#ffffff">MathGate</text>
+<text x="260" y="67" font-family="Arial,sans-serif" font-size="17" fill="#dafb84">SOLVE MATH · EARN SCREEN TIME</text>
+<text x="46" y="102" font-family="Arial,sans-serif" font-size="16" fill="#bcd9d9">An illustrated look at the Android experience — not a device screenshot</text>
+
+<g transform="translate(45 137)">
+  <rect width="335" height="464" rx="35" fill="#141b20" stroke="#99c8bc" stroke-width="4"/>
+  <rect x="12" y="12" width="311" height="440" rx="25" fill="#f7faf6"/>
+  <text x="36" y="61" font-size="15" font-family="Arial" font-weight="700" fill="#038f80">01  /  INSTAGRAM LIMIT</text>
+  <text x="36" y="104" font-size="30" font-family="Arial" font-weight="800" fill="#112e33">LESS SCROLL.</text>
+  <text x="36" y="140" font-size="30" font-family="Arial" font-weight="800" fill="#112e33">MORE SOLVING.</text>
+  <rect x="30" y="168" width="274" height="154" rx="20" fill="#112e33"/>
+  <text x="49" y="198" font-size="15" font-family="Arial" font-weight="700" fill="#daff6e">TODAY'S INSTAGRAM</text>
+  <text x="49" y="246" font-size="40" font-family="Arial" font-weight="800" fill="#ffffff">20:00</text>
+  <rect x="49" y="272" width="234" height="9" rx="5" fill="#49666a"/><rect x="49" y="272" width="234" height="9" rx="5" fill="#daff6e"/>
+  <text x="49" y="306" font-size="14" font-family="Arial" fill="#ffffff">Daily limit reached</text>
+  <rect x="30" y="344" width="274" height="65" rx="17" fill="url(#lime)"/>
+  <text x="63" y="384" font-size="18" font-weight="800" font-family="Arial" fill="#112e33">Solve to unlock +5m</text>
+</g>
+<g transform="translate(432 137)">
+  <rect width="335" height="464" rx="35" fill="#141b20" stroke="#99c8bc" stroke-width="4"/>
+  <rect x="12" y="12" width="311" height="440" rx="25" fill="#f7faf6"/>
+  <text x="36" y="61" font-size="15" font-family="Arial" font-weight="700" fill="#038f80">02  /  CALCULUS</text>
+  <text x="36" y="103" font-size="27" font-family="Arial" font-weight="800" fill="#112e33">EARN +05:00</text>
+  <rect x="27" y="125" width="280" height="210" rx="17" fill="#ffffff" stroke="#dde9e5"/>
+  <text x="43" y="154" font-size="15" font-family="Arial" font-weight="700" fill="#038f80">ANALYSIS I / II</text>
+  <text x="49" y="205" font-size="25" font-family="Georgia" fill="#112e33">∫  (x² + 1) dx</text>
+  <text x="49" y="237" font-size="18" font-family="Georgia" fill="#112e33">0 → 1</text>
+  <rect x="43" y="264" width="248" height="52" rx="12" fill="#f4f8f5" stroke="#adbfbe"/>
+  <text x="57" y="296" font-size="18" font-family="Arial" fill="#839594">Your numerical answer</text>
+  <rect x="27" y="353" width="280" height="56" rx="17" fill="#ff8268"/>
+  <text x="90" y="389" font-size="19" font-family="Arial" font-weight="800" fill="#102f34">CHECK ANSWER</text>
+</g>
+<g transform="translate(820 137)">
+  <rect width="335" height="464" rx="35" fill="#141b20" stroke="#99c8bc" stroke-width="4"/>
+  <rect x="12" y="12" width="311" height="440" rx="25" fill="#f7faf6"/>
+  <text x="36" y="60" font-size="15" font-family="Arial" font-weight="700" fill="#038f80">03  /  VICTORY</text>
+  <text x="36" y="104" font-size="34" font-family="Arial" font-weight="800" fill="#fb7156">CONGRATS!</text>
+  <rect x="27" y="125" width="280" height="207" rx="18" fill="#e5eee8"/>
+  <path d="M93 220 L118 152 151 192 184 151 215 220" fill="#bca88c" stroke="#715f51" stroke-width="4"/>
+  <ellipse cx="157" cy="227" rx="73" ry="70" fill="#d7bd91" stroke="#716353" stroke-width="3"/>
+  <ellipse cx="131" cy="221" rx="12" ry="17" fill="#ffffff"/><ellipse cx="181" cy="221" rx="12" ry="17" fill="#ffffff"/>
+  <circle cx="134" cy="223" r="6" fill="#253237"/><circle cx="178" cy="223" r="6" fill="#253237"/>
+  <path d="M149 246 L166 246 157 255 Z" fill="#a76b6c"/>
+  <path d="M156 255 Q142 273 130 258 M157 255 Q173 272 183 258" fill="none" stroke="#715f51" stroke-width="3"/>
+  <path d="M118 211 L145 211 145 233 118 233 Z M168 211 L195 211 195 233 168 233 Z M145 220 L168 220" stroke="#172f36" stroke-width="4" fill="none"/>
+  <text x="60" y="310" font-family="Arial" font-size="16" font-weight="800" fill="#11383a">THE CAT COUNCIL APPROVES</text>
+  <rect x="27" y="354" width="280" height="55" rx="17" fill="url(#lime)"/>
+  <text x="82" y="389" font-size="19" font-weight="800" font-family="Arial" fill="#112e33">CLAIM +5:00</text>
+</g>
+<text x="45" y="628" font-family="Arial" font-size="15" fill="#c7e5e0">20 minutes included each day · One correct problem earns 5 more · Native Android app</text>
+</svg>
