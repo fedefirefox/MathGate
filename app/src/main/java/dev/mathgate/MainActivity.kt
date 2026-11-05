@@ -12,6 +12,28 @@ class MainActivity : Activity() {
     private var feedback: String? = null
     private var releaseLink: String? = null
     private var isUpdating = false
+    private var previewId: String? = null
+    private var previewLevel: String? = null
+    private var activeScroll: android.widget.ScrollView? = null
+
+    /**
+     * A practice preview only. It does not change the locked challenge's seed,
+     * the number of earned minutes, or the daily Instagram limit.
+     */
+    private fun nextPreview() {
+        val level = GateState.difficulty(this)
+        val others = try {
+            LibraryStore.current(this).problems
+                .filter { it.level == level && it.id != previewId }
+        } catch (_: Exception) {
+            emptyList()
+        }
+        if (others.isNotEmpty()) {
+            previewId = others.random().id
+            previewLevel = level
+        }
+        render(preserveScroll = true)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +83,12 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun render() {
+    private fun render(preserveScroll: Boolean = false) {
+        val oldScrollY = if (preserveScroll) activeScroll?.scrollY ?: 0 else 0
         val root = GateUi.root(this)
-        setContentView(GateUi.scroll(this, root))
+        val scroll = GateUi.scroll(this, root)
+        activeScroll = scroll
+        setContentView(scroll)
         val usageOK = GateState.hasUsageAccess(this)
         val guardOK = accessibilityEnabled()
         val used = GateState.usedMs(this)
@@ -143,7 +168,9 @@ class MainActivity : Activity() {
                 if (selected) GateUi.LIME else GateUi.SOFT,
                 GateUi.INK) {
                 GateState.setDifficulty(this, value)
-                render()
+                previewId = null
+                previewLevel = null
+                render(preserveScroll = true)
             }
             difficultyBar.addView(control,
                 LinearLayout.LayoutParams(0, GateUi.dp(this, 55), 1f).apply {
@@ -157,15 +184,29 @@ class MainActivity : Activity() {
             else -> "Standard · core university-level Analysis I/II, around 5–10 minutes."
         }, 13f, GateUi.MUTED), bottom = 18)
 
-        val example = try {
-            LibraryStore.current(this).problems.firstOrNull { it.level == level }
-        } catch (_: Exception) { null }
+        val candidatePreviews = try {
+            LibraryStore.current(this).problems.filter { it.level == level }
+        } catch (_: Exception) { emptyList() }
+        val example = (if (previewLevel == level) {
+            candidatePreviews.firstOrNull { it.id == previewId }
+        } else null) ?: candidatePreviews.randomOrNull()?.also {
+            previewId = it.id
+            previewLevel = level
+        }
         if (example != null) {
             val preview = GateUi.panel(this)
             GateUi.add(preview, GateUi.text(this,
-                "EQUATION PREVIEW   /   " + example.topic.uppercase(),
-                12f, GateUi.TEAL, true), bottom = 4)
-            GateUi.add(preview, MathRenderer.create(this, example.latex))
+                "EQUATION PREVIEW  /  " + example.topic.uppercase(),
+                12f, GateUi.TEAL, true), bottom = 5)
+            GateUi.add(preview, GateUi.text(this,
+                example.prompt, 14f, GateUi.MUTED), bottom = 5)
+            GateUi.add(preview, MathRenderer.create(this, example.latex), bottom = 9)
+            GateUi.add(preview, GateUi.button(this,
+                "↻  Show another equation", GateUi.LIME, GateUi.INK
+            ) { nextPreview() }, bottom = 9)
+            GateUi.add(preview, GateUi.text(this,
+                "Practice preview only. Refreshing does not change or skip the real Instagram unlock challenge.",
+                12f, GateUi.MUTED))
             GateUi.add(root, preview, bottom = 18)
         }
 
@@ -202,5 +243,6 @@ class MainActivity : Activity() {
             13f, GateUi.MUTED), bottom = 12)
         GateUi.add(root, GateUi.button(this, "Refresh usage",
             GateUi.SOFT, GateUi.INK) { render() })
+        if (preserveScroll) scroll.post { scroll.scrollTo(0, oldScrollY) }
     }
 }

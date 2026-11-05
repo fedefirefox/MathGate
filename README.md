@@ -4,12 +4,14 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.3.0?
+## What's in version 0.4.0?
 
-- **36 curated problems:** 12 Foundation, 12 Standard, 12 Advanced. The previous eight coefficient-randomized templates remain as emergency fallback.
+- **54 curated problems:** 18 Foundation, 18 Standard, 18 Advanced. The previous eight coefficient-randomized templates remain as emergency fallback.
 - Topics include **Cauchy's formula and residue theorem** (simple, repeated and higher-order poles), **PDEs** (heat, wave, transport, Laplace, Poisson, inviscid Burgers), vector calculus, ODEs, integration, Fourier methods, optimization and series.
 - **Good-looking math:** common TeX formulas are converted to offline MathML Core and displayed by Android WebView. No CDN or JavaScript is needed.
 - **Difficulty selector** inside MathGate. Changing difficulty never resets Instagram usage.
+- **Show another equation** in the practice-preview card displays a different randomly selected question at your chosen difficulty. The view includes a short prompt and a typeset equation, not the answer. It stays at your current scroll position.
+- Preview refresh does **not** alter, skip, or regenerate the genuine challenge blocking Instagram. That challenge remains fixed until solved.
 - **Typed numeric expressions:** 2*pi, sqrt(3)/2, exp(-1), 1/3, etc. MathGate does not evaluate full symbolic proofs.
 - **Download new equations from GitHub** in the app; new questions do not require a new APK.
 - **Check for MathGate app updates** through GitHub Releases. Android must still approve APK installation.
@@ -50,7 +52,7 @@ Open [Build Android APK workflows](https://github.com/fedefirefox/MathGate/actio
 
 When stable APK releases are published, they will appear under [GitHub Releases](https://github.com/fedefirefox/MathGate/releases). The in-app **Check for MathGate app update** button checks this endpoint.
 
-**Important:** The present debug APKs are signed using runner-specific GitHub Actions debug keys. A future APK may have a different certificate, and Android will then refuse an in-place update. It may require uninstalling the previous version. For real seamless one-tap upgrades, the maintainer must configure a consistent, PRIVATE release-signing keystore through encrypted GitHub Actions secrets and publish release APKs. **This signing infrastructure has not yet been configured.** Reinstalling can clear locally earned minutes and settings, although system usage history persists.
+**Important:** The present debug APKs are signed using runner-specific GitHub Actions debug keys. A future APK may have a different certificate, and Android will then refuse an in-place update. It may require uninstalling the previous version. For reliable in-place APK upgrades, the maintainer must configure a consistent, PRIVATE release-signing keystore through encrypted GitHub Actions secrets and publish release APKs. **This signing infrastructure has not yet been configured.** Reinstalling can clear locally earned minutes and settings, although system usage history persists.
 
 ## Get more problems from GitHub (no APK reinstall)
 
@@ -87,4 +89,4 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.3.0**. Problem-library schema version **1**. Licensed MIT.
+App version **0.4.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.

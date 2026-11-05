@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.0
+- Added practice-preview **Show another equation** refresh. Each tap shows a different exercise from the selected difficulty without revealing the answer.
+- The preview refresh does not replace or bypass a live Instagram unlock challenge.
+- Increased the public GitHub question library to **54 problems**: 18 Foundation, 18 Standard and 18 Advanced, including more conventional definite and improper integrals.
+- Bundled question-bank revision 2 while keeping the in-app GitHub library update path.
+- Preserved the 20-minute daily Instagram allowance and five-minute reward per correct response.
+
 ## v0.3.0
 - 36 curated problems, 12 each at Foundation, Standard and Advanced difficulty.
 - Added residue-theorem and PDE questions.
