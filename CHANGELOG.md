@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.0 — Non-repeating math challenge selection
+- Remember successfully completed question IDs per difficulty in persistent app settings.
+- Do not repeat a completed question until all available questions at that difficulty have been solved.
+- Prefer changing the subject family between consecutive unlocks (e.g. calculus integral → PDE/residue problem), if unseen candidates permit.
+- Keep the challenge unchanged after failed answers, task switching or app restarts.
+- Move to the next question only after the user actually claims the +5 minute reward.
+- Preserve the last question across a fresh cycle to avoid immediate repeats.
+- Automated selection tests run in Android GitHub Actions CI; unchanged 20 min daily baseline and +5 min reward.
+- Current Android bank: 54 questions, 18 at each difficulty. This update changes app code and therefore needs a new APK.
+
 ## v0.8.0 — Guided Samsung setup + iOS source preview
 - On first Android launch, automatically guide users through Usage Access, the separate App info / Allow restricted settings step, and Accessibility.
 - Verify actual permission states; include a repair path from the dashboard.

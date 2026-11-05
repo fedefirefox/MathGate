@@ -9,7 +9,15 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.8.0?
+## What's in version 0.9.0?
+
+**No repeated unlock questions until you've completed the pool.** MathGate now records the ID of every successfully claimed mathematical problem, separately for Foundation, Standard and Advanced, and keeps a question from reappearing until the entire 18-question pool at that difficulty has been solved. It also prefers a different subject family—standard integrals, residue theorem, PDE, etc.—from the previous solution whenever possible. At a cycle boundary, the last solved problem is still excluded if another is available.
+
+**Unsolved problems stay fixed.** Closing the app, returning from Instagram, refreshing the preview, or getting the answer wrong will *not* replace the active lock challenge. Only successfully solving **and claiming** +5:00 completes the problem. History is stored locally across app restarts and local days. Uninstalling the app clears local history. Downloading a larger owner-signed question library adds new choices without disabling the protection.
+
+The implementation is covered by JUnit tests for no repeats within a cycle, topic variety, cycle rollover, limited question banks and input validation.
+
+## Previous version 0.8.0
 
 **Android first-install setup wizard:** If Usage Access or Accessibility permission isn't enabled, MathGate now opens a guided, progress-checked, three-step setup screen. Step 1 opens Android Usage Access; step 2 opens **MathGate App info** with explicit instructions for Samsung's hidden **⋮ → Allow restricted settings** control; step 3 opens Accessibility settings. The wizard verifies both actual Android permissions and only marks protection ready when both are enabled. The main dashboard has a **View permission setup checklist** link.
 
@@ -130,7 +138,7 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.8.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.9.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
 
 ## Repository protection status
 

@@ -9,8 +9,8 @@ android {
         applicationId = "dev.mathgate"
         minSdk = 29
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.8.0"
+        versionCode = 9
+        versionName = "0.9.0"
     }
     signingConfigs {
         create("stableRelease") {
@@ -35,4 +35,5 @@ android {
 
 dependencies {
     implementation("androidx.core:core:1.13.1")
+    testImplementation("junit:junit:4.13.2")
 }

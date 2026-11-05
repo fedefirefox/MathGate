@@ -43,6 +43,9 @@ object GateState {
         if (p.getString("day", null) != today()) {
             p.edit().putString("day", today()).putInt("bonuses", 0)
                 .remove("challengeSeed")
+                .remove("activeProblemId")
+                .remove("activeProblemLevel")
+                .remove("activeProblemFamily")
                 .remove("rewardTicket")
                 .remove("rewardProblem")
                 .apply()
@@ -143,10 +146,15 @@ object GateState {
         val p = prefs(c)
         val existing = p.getString("rewardTicket", null)
         if (!existing.isNullOrBlank()) return existing
+        // Only the currently displayed challenge can create a reward ticket.
+        val activeId = p.getString("activeProblemId", null)
+        if (activeId.isNullOrBlank() || activeId != verifiedProblemId) return null
         val ticket = UUID.randomUUID().toString()
         val accepted = p.edit()
             .putString("rewardTicket", ticket)
             .putString("rewardProblem", verifiedProblemId.take(80))
+            .putString("rewardLevel", p.getString("activeProblemLevel", difficulty(c)))
+            .putString("rewardFamily", p.getString("activeProblemFamily", "unknown"))
             .commit()
         return if (accepted) ticket else null
     }
@@ -160,31 +168,107 @@ object GateState {
      * Crediting is an atomic, one-time local action triggered ONLY by the
      * user's Claim +5:00 button. Never credit on correct-answer detection.
      */
+    private fun historyKey(level: String): String =
+        "completedProblemIds_" + level
+
+    /** Credits +5:00 and records the solved question in the same transaction. */
     @Synchronized
     fun claimReward(c: Context, ticket: String): Boolean {
         ensureDay(c)
         if (!hasUsageAccess(c)) return false
         val p = prefs(c)
         val pending = p.getString("rewardTicket", null)
-        if (pending.isNullOrEmpty() || pending != ticket) return false
-        val current = p.getInt("bonuses", 0).coerceIn(0, 100_000)
+        if (pending.isNullOrBlank() || pending != ticket) return false
+        val completedId = p.getString("rewardProblem", null)
+        val completedLevel = p.getString("rewardLevel", "standard") ?: "standard"
+        val completedFamily = p.getString("rewardFamily", "unknown") ?: "unknown"
+        if (completedId.isNullOrBlank()) return false
+
+        val old = p.getStringSet(historyKey(completedLevel), emptySet())
+            ?.toMutableSet() ?: mutableSetOf()
+        old.add(completedId)
+
+        val count = p.getInt("bonuses", 0).coerceIn(0, 100_000)
         return p.edit()
-            .putInt("bonuses", current + 1)
+            .putInt("bonuses", count + 1)
+            .putStringSet(historyKey(completedLevel), old.toSet())
+            .putString("lastSolvedProblemId", completedId)
+            .putString("lastSolvedFamily", completedFamily)
+            .remove("activeProblemId")
+            .remove("activeProblemLevel")
+            .remove("activeProblemFamily")
             .remove("rewardTicket")
             .remove("rewardProblem")
+            .remove("rewardLevel")
+            .remove("rewardFamily")
             .remove("challengeSeed")
             .commit()
     }
 
+    /**
+     * Stable until solved: reopening Instagram, leaving MathGate, switching
+     * activities or making an incorrect attempt does not reroll a challenge.
+     * Only a CLAIMED reward changes the question and completed-ID history.
+     */
+    @Synchronized
     fun problem(c: Context): CalculusProblem {
         ensureDay(c)
         val p = prefs(c)
+        val bank = try { LibraryStore.current(c).problems } catch (_: Exception) { emptyList() }
+
+        val activeId = p.getString("activeProblemId", null)
+        if (!activeId.isNullOrBlank()) {
+            bank.firstOrNull { it.id == activeId }?.let { return it }
+        }
+
+        val selectedLevel = difficulty(c)
+        if (bank.isNotEmpty()) {
+            val options = bank.filter { it.level == selectedLevel }
+            if (options.isNotEmpty()) {
+                val key = historyKey(selectedLevel)
+                var completed = p.getStringSet(key, emptySet())?.toSet() ?: emptySet()
+
+                // A new shuffled cycle starts only once every question at the
+                // selected difficulty has already been completed.
+                if (options.all { it.id in completed }) {
+                    p.edit().remove(key).commit()
+                    completed = emptySet()
+                }
+                val picked = QuestionSelection.choose(
+                    options.map {
+                        QuestionSelection.Item(it.id, QuestionSelection.family(it.topic))
+                    },
+                    completed,
+                    p.getString("lastSolvedProblemId", null),
+                    p.getString("lastSolvedFamily", null),
+                    Random(rng.nextLong())
+                )
+                val next = options.first { it.id == picked.id }
+                p.edit()
+                    .putString("activeProblemId", next.id)
+                    .putString("activeProblemLevel", selectedLevel)
+                    .putString("activeProblemFamily", picked.family)
+                    .commit()
+                return next
+            }
+        }
+
+        // Safe offline fallback if the shipped problem bank cannot be parsed.
+        // Keep the generated question stable across the challenge session.
         var seed = p.getInt("challengeSeed", 0)
         if (seed == 0) {
             seed = rng.nextInt(Int.MAX_VALUE - 1) + 1
-            p.edit().putInt("challengeSeed", seed).apply()
+            p.edit().putInt("challengeSeed", seed).commit()
         }
-        return LibraryStore.choose(c, seed, difficulty(c)) ?: ProblemBank.generate(seed)
+        val fallback = ProblemBank.generate(seed).copy(
+            id = "fallback-" + seed, level = selectedLevel
+        )
+        p.edit()
+            .putString("activeProblemId", fallback.id)
+            .putString("activeProblemLevel", selectedLevel)
+            .putString("activeProblemFamily", QuestionSelection.family(fallback.topic))
+            .commit()
+        return fallback
     }
 
     fun timeLabel(ms: Long): String {

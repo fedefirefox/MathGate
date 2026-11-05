@@ -28,6 +28,8 @@ jobs:
         run: python3 tools/validate_cat_memes.py
       - name: Verify owner signature and checksums
         run: python3 tools/verify_assets.py
+      - name: Unit-test non-repeating question selection
+        run: gradle --no-daemon testDebugUnitTest
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
       - name: Smoke-test stable release signing with a THROWAWAY CI key

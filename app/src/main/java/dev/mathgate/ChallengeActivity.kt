@@ -65,7 +65,7 @@ class ChallengeActivity : Activity() {
             val card = GateUi.panel(this)
             GateUi.add(card, GateUi.text(this,
                 question.topic.uppercase() + "   ·   " +
-                    GateState.difficulty(this).uppercase(),
+                    question.level.uppercase(),
                 12f, GateUi.TEAL, true), bottom = 12)
             GateUi.add(card, GateUi.text(this, question.prompt,
                 16f, GateUi.MUTED), bottom = 7)
