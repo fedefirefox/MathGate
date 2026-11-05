@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "revision": 1,
+  "source": "Original AI-generated cat illustrations and playful captions. Same entry per local day; captions are editable on GitHub.",
+  "memes": [
+    {
+      "id": "M01",
+      "image": "cat_01.webp",
+      "title": "THE CAT COUNCIL APPROVES",
+      "message": "This integral is officially pawsitive. Your neurons may have five minutes of questionable scrolling."
+    },
+    {
+      "id": "M02",
+      "image": "cat_02.webp",
+      "title": "PDE? PFFT. EASY.",
+      "message": "The universe remains stable. The Instagram algorithm is less certain."
+    },
+    {
+      "id": "M03",
+      "image": "cat_01.webp",
+      "title": "YOU HAVE MEOW-STERED THE MATH",
+      "message": "The Council awards five minutes and exactly zero extra cat treats."
+    },
+    {
+      "id": "M04",
+      "image": "cat_02.webp",
+      "title": "SCHRÖDINGER IS IMPRESSED",
+      "message": "The cat was simultaneously proud and disappointed until you tapped Submit."
+    },
+    {
+      "id": "M05",
+      "image": "cat_01.webp",
+      "title": "RESIDUE? RESOLVED.",
+      "message": "Your complex-plane crimes have been pardoned by the Feline Academy."
+    },
+    {
+      "id": "M06",
+      "image": "cat_02.webp",
+      "title": "CAPTAIN CALCULUS",
+      "message": "A cat with a PhD in napping has verified the solution. Congratulations."
+    },
+    {
+      "id": "M07",
+      "image": "cat_01.webp",
+      "title": "INTEGRAL SOLVED. TUNA UNLOCKED.",
+      "message": "Technically no tuna was unlocked. Your five minutes are real, though."
+    },
+    {
+      "id": "M08",
+      "image": "cat_02.webp",
+      "title": "THE PLOT THICKENS",
+      "message": "Your solution is smooth. Your scrolling habits are still discontinuous."
+    },
+    {
+      "id": "M09",
+      "image": "cat_01.webp",
+      "title": "PROBLEM DEFEATED!",
+      "message": "One small step for mathematics. One enormous leap for feline-kind."
+    },
+    {
+      "id": "M10",
+      "image": "cat_02.webp",
+      "title": "THE KITTY REVIEW BOARD ACCEPTS",
+      "message": "Minor revision requested: spend at least two of the five minutes wisely."
+    },
+    {
+      "id": "M11",
+      "image": "cat_01.webp",
+      "title": "NO SINGULARITIES HARMED",
+      "message": "This computation passed peer review by three very judgmental cats."
+    },
+    {
+      "id": "M12",
+      "image": "cat_02.webp",
+      "title": "FELINE FELLOWSHIP AWARDED",
+      "message": "A prestigious award of +05:00 has been added to your scroll budget."
+    },
+    {
+      "id": "M13",
+      "image": "cat_01.webp",
+      "title": "ANALYSIS: ABSOLUTELY PURR-FECT",
+      "message": "The limit exists. The cat's patience does not."
+    },
+    {
+      "id": "M14",
+      "image": "cat_02.webp",
+      "title": "THE UNIVERSE SAYS WELL DONE",
+      "message": "The gradient points toward five minutes of Instagram."
+    },
+    {
+      "id": "M15",
+      "image": "cat_01.webp",
+      "title": "CALCULUS 1, DOOMSCROLLING 0",
+      "message": "The feline principal investigator is reluctantly satisfied."
+    },
+    {
+      "id": "M16",
+      "image": "cat_02.webp",
+      "title": "MEOWTHEMATICS COMPLETE",
+      "message": "Your brain has defeated the algorithm. Temporarily."
+    }
+  ]
+}
