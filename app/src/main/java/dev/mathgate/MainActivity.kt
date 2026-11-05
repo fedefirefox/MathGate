@@ -66,7 +66,7 @@ class MainActivity : Activity() {
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(19, 14, 48), Color.rgb(74, 32, 113), Color.rgb(19, 14, 48)))
         }
-        val scroll = ScrollView(this).apply { fillViewport = true }
+        val scroll = ScrollView(this).apply { isFillViewport = true }
         scroll.addView(root)
         setContentView(scroll)
         val white = Color.WHITE
