@@ -7,20 +7,27 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
+import android.widget.LinearLayout
 
-/** Guided permission setup for Android/Samsung. No app can toggle these permissions itself. */
+/**
+ * Samsung/Android sideloaded-APK onboarding.
+ *
+ * IMPORTANT: One UI may hide "Allow restricted settings" until the user
+ * FIRST opens the blocked Accessibility service and dismisses its warning.
+ * The real sequence is Accessibility -> App info -> Accessibility again.
+ *
+ * Android exposes actual Usage Access and Accessibility permission state.
+ * It does NOT expose a read-only API for "Allow restricted settings".
+ * Visited screens are guidance milestones, never treated as proof of access.
+ */
 class SetupActivity : Activity() {
-    private var openedAppInfo = false
+    private val steps by lazy {
+        getSharedPreferences("mathgate_setup_navigation", MODE_PRIVATE)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         GateUi.styleBars(this)
-        openedAppInfo = savedInstanceState?.getBoolean("openedAppInfo") ?: false
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean("openedAppInfo", openedAppInfo)
-        super.onSaveInstanceState(outState)
     }
 
     override fun onResume() {
@@ -38,96 +45,152 @@ class SetupActivity : Activity() {
         }
     }
 
-    private fun line(parent: android.widget.LinearLayout, message: String) {
-        GateUi.add(parent, GateUi.text(this, message, 14f, GateUi.MUTED), bottom = 9)
+    private fun openAccessibility(firstAttempt: Boolean) {
+        if (firstAttempt) {
+            steps.edit().putBoolean("tried_accessibility_first", true).apply()
+        }
+        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
+    private fun openAppInfo() {
+        steps.edit().putBoolean("opened_app_info", true).apply()
+        startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        })
+    }
+
+    private fun addText(parent: LinearLayout, content: String, emphatic: Boolean = false) {
+        GateUi.add(parent, GateUi.text(
+            this, content,
+            if (emphatic) 15f else 14f,
+            if (emphatic) GateUi.INK else GateUi.MUTED,
+            emphatic
+        ), bottom = 9)
+    }
+
+    private fun step(title: String): LinearLayout = GateUi.panel(this).also { box ->
+        GateUi.add(box, GateUi.text(this, title, 14f, GateUi.TEAL, true), bottom = 6)
     }
 
     private fun render() {
         val usage = GateState.hasUsageAccess(this)
         val guard = accessibilityEnabled()
         val ready = usage && guard
+        val triedFirst = steps.getBoolean("tried_accessibility_first", false)
+        val visitedInfo = steps.getBoolean("opened_app_info", false)
+
         val root = GateUi.root(this)
         setContentView(GateUi.scroll(this, root))
         GateUi.add(root, GateUi.text(this,
-            "●  MATHGATE  /  FIRST-TIME SETUP", 13f, GateUi.TEAL, true), bottom = 12)
+            "●  MATHGATE  /  SAMSUNG SETUP",
+            13f, GateUi.TEAL, true), bottom = 12)
         GateUi.add(root, GateUi.text(this,
-            if (ready) "INSTAGRAM GUARD\nREADY." else "ACTIVATE YOUR\nINSTAGRAM GUARD.",
-            31f, GateUi.INK, true), bottom = 7)
-        line(root, "Follow this one-time checklist. Return to MathGate after each Settings screen. We check the actual Android permissions automatically.")
+            if (ready) "INSTAGRAM GUARD\nREADY." else "SET UP YOUR\nINSTAGRAM GUARD.",
+            30f, GateUi.INK, true), bottom = 6)
+        addText(root,
+            "Follow the Android screens in order. On some Samsung devices, the first " +
+            "blocked Accessibility attempt is needed before the three-dot menu appears.")
 
         val summary = GateUi.panel(this, true)
         GateUi.add(summary, GateUi.text(this,
-            if (ready) "✓  ALL REQUIRED PERMISSIONS ENABLED" else "PERMISSION CHECKLIST",
-            13f, GateUi.LIME, true), bottom = 10)
+            if (ready) "✓ PROTECTION READY" else "REQUIRED PERMISSIONS",
+            13f, GateUi.LIME, true), bottom = 9)
         GateUi.add(summary, GateUi.progress(this,
-            (if (usage) 0.5f else 0f) + (if (guard) 0.5f else 0f)), bottom = 10)
+            (if (usage) 0.5f else 0f) + (if (guard) 0.5f else 0f)), bottom = 8)
         GateUi.add(summary, GateUi.text(this,
-            (if (usage) "✓ " else "○ ") + "System Usage Access\n" +
-                (if (guard) "✓ " else "○ ") + "Accessibility Instagram Guard",
+            (if (usage) "✓ " else "○ ") + "Usage Access\n" +
+            (if (guard) "✓ " else "○ ") + "MathGate Accessibility Guard",
             15f, GateUi.WHITE))
         GateUi.add(root, summary, bottom = 15)
 
-        val one = GateUi.panel(this)
-        GateUi.add(one, GateUi.text(this,
-            "01  ·  USAGE ACCESS " + (if (usage) "✓" else ""),
-            15f, GateUi.TEAL, true), bottom = 6)
-        line(one, if (usage) "Permission granted and verified."
-            else "Tap below → find MathGate → switch Permit usage access ON → return here.")
-        GateUi.add(one, GateUi.button(this,
-            if (usage) "✓ Usage Access granted" else "Open Usage Access settings",
+        val first = step("01  ·  GRANT USAGE ACCESS" + if (usage) "  ✓" else "")
+        addText(first, if (usage) "Permission verified."
+            else "Open Usage Access, find MathGate and enable Permit usage access.")
+        GateUi.add(first, GateUi.button(this,
+            if (usage) "✓ Usage Access enabled" else "Open Usage Access",
             if (usage) GateUi.SOFT else GateUi.TEAL,
-            if (usage) GateUi.INK else GateUi.WHITE) {
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-        })
-        GateUi.add(root, one, bottom = 13)
+            if (usage) GateUi.INK else GateUi.WHITE
+        ) { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) })
+        GateUi.add(root, first, bottom = 12)
 
-        val two = GateUi.panel(this)
-        GateUi.add(two, GateUi.text(this, "02  ·  UNLOCK SAMSUNG RESTRICTED SETTINGS",
-            15f, GateUi.TEAL, true), bottom = 6)
-        line(two, "On a sideloaded APK, Samsung first blocks the Accessibility switch. This must be allowed manually on MathGate's App info page:")
-        GateUi.add(two, GateUi.text(this,
-            "Settings → Apps → MathGate → ⋮ (top right) → Allow restricted settings → confirm with PIN/fingerprint.",
-            15f, GateUi.INK, true), bottom = 7)
-        line(two, "This option is NOT on the Accessibility page. Android doesn't provide an API to grant it or read its state directly.")
-        GateUi.add(two, GateUi.button(this,
-            "Open MathGate App info (step 2)", GateUi.INK, GateUi.WHITE) {
-            openedAppInfo = true
-            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.fromParts("package", packageName, null)
-            })
-        })
-        GateUi.add(root, two, bottom = 13)
-
-        val three = GateUi.panel(this)
-        GateUi.add(three, GateUi.text(this,
-            "03  ·  ENABLE INSTAGRAM GUARD " + (if (guard) "✓" else ""),
-            15f, GateUi.TEAL, true), bottom = 6)
-        line(three, if (guard) "MathGate Instagram Guard is ON and verified."
-        else "Open Accessibility → Installed apps → MathGate Instagram Guard → On. Accept the system warning, then return here.")
-        GateUi.add(three, GateUi.button(this,
-            if (guard) "✓ Accessibility enabled" else "Open Accessibility settings (step 3)",
-            if (guard) GateUi.SOFT else GateUi.TEAL,
-            if (guard) GateUi.INK else GateUi.WHITE) {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        })
-        if (openedAppInfo && !guard) {
-            GateUi.add(three, GateUi.text(this,
-                "If Android says 'App was denied access,' go back to step 2 and select Allow restricted settings.",
-                13f, GateUi.CORAL), top = 8)
+        // Visit Accessibility FIRST to trigger the restrictive-permission dialog.
+        val second = step("02  ·  ACCESSIBILITY — FIRST VISIT" +
+            if (guard) "  ✓" else "")
+        addText(second, if (guard) "Accessibility is already enabled. Steps 3–4 aren't needed."
+        else "Open Accessibility → Installed apps → MathGate Instagram Guard. " +
+            "Tap the disabled entry or try turning it ON. When Samsung says " +
+            "'App was denied access', tap Close/OK and return to MathGate.")
+        if (!guard) {
+            GateUi.add(second, GateUi.button(this,
+                if (triedFirst) "Retry initial Accessibility visit"
+                else "Try Accessibility first",
+                GateUi.TEAL, GateUi.WHITE
+            ) { openAccessibility(firstAttempt = true) })
+            addText(second, if (triedFirst)
+                "Accessibility page opened. This records a visit, not proof you tapped the blocked switch."
+            else "Do this before App info: otherwise the three-dot menu may be missing.")
         }
-        GateUi.add(root, three, bottom = 14)
+        GateUi.add(root, second, bottom = 12)
+
+        val third = step("03  ·  APP INFO — ALLOW RESTRICTED SETTINGS")
+        if (guard) {
+            addText(third, "Already allowed; your guard is active.")
+        } else {
+            addText(third,
+                "After dismissing the blocked-access warning, open " +
+                "MathGate App info → ⋮ (top-right) → Allow restricted settings. " +
+                "Confirm with fingerprint or PIN, then return here.")
+            if (triedFirst) {
+                GateUi.add(third, GateUi.button(this,
+                    "Open MathGate App info",
+                    GateUi.INK, GateUi.WHITE
+                ) { openAppInfo() })
+                addText(third,
+                    "If the ⋮ menu isn't there, return to step 2 and actually tap the blocked service first.")
+            } else {
+                addText(third, "First complete step 2 to reveal this Samsung setting.")
+            }
+        }
+        GateUi.add(root, third, bottom = 12)
+
+        val fourth = step("04  ·  ACCESSIBILITY — RETURN AND ENABLE" +
+            if (guard) "  ✓" else "")
+        if (guard) {
+            addText(fourth, "Permission verified: MathGate Instagram Guard is ON.")
+        } else if (visitedInfo) {
+            addText(fourth,
+                "Now return to Accessibility → Installed apps → MathGate Instagram Guard " +
+                "and switch it ON. Accept Android's confirmation, then return to MathGate.")
+            GateUi.add(fourth, GateUi.button(this,
+                "Return to Accessibility and enable",
+                GateUi.TEAL, GateUi.WHITE
+            ) { openAccessibility(firstAttempt = false) })
+            addText(fourth,
+                "Still denied? Go back to step 3 and check that you confirmed Allow restricted settings.")
+        } else {
+            addText(fourth,
+                "After step 3, return here and use the button to enable the guard. " +
+                "This final permission is checked automatically.")
+        }
+        GateUi.add(root, fourth, bottom = 15)
 
         if (ready) {
             GateUi.add(root, GateUi.button(this,
-                "✓ FINISH SETUP — OPEN MATHGATE", GateUi.LIME, GateUi.INK) {
+                "✓ FINISH SETUP — OPEN MATHGATE",
+                GateUi.LIME, GateUi.INK
+            ) {
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
-            }, bottom = 14)
+            }, bottom = 13)
         } else {
-            line(root, "Finish all required permissions before using the blocker. No skip or in-app disable option.")
+            addText(root,
+                "The first Accessibility visit and App info visit are navigation steps; " +
+                "MathGate reports success only when Usage Access and Accessibility are really ON.")
         }
+
         GateUi.add(root, GateUi.text(this,
-            "Accessibility is sensitive: MathGate monitors foreground package events, not messages or screen contents. Android always lets you revoke it in Settings.",
+            "Accessibility is sensitive. Only grant it to an app you trust. " +
+            "Android Settings can always revoke these permissions.",
             12f, GateUi.MUTED))
     }
 }

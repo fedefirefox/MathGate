@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.1 — Samsung Accessibility setup order
+- First-time wizard now follows Usage Access → Accessibility FIRST (trigger restricted-setting denial) → App info / ⋮ Allow restricted settings → Accessibility AGAIN (enable).
+- Treat opening Settings screens as guidance only. Setup only reports success after actual Usage Access and Accessibility are granted.
+- Explain why the three-dot App info menu may be hidden until the initial denied attempt; skip steps 3–4 if Accessibility can be enabled directly.
+- Update README instructions to match Samsung's actual flow. No change to daily limits or math problem selection.
+
 ## v0.9.0 — Non-repeating math challenge selection
 - Remember successfully completed question IDs per difficulty in persistent app settings.
 - Do not repeat a completed question until all available questions at that difficulty have been solved.

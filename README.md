@@ -9,7 +9,11 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.9.0?
+## What's in version 0.9.1?
+
+**Correct Samsung installation order:** The first-run wizard now follows **Accessibility (attempt/trigger warning) → MathGate App info (⋮ Allow restricted settings) → Accessibility again (enable)**, after Usage Access. This fixes the missing three-dot menu on Samsung firmware that only exposes the option after the first blocked Accessibility attempt. Only actual Android permission states determine completion. No Instagram timer or equation-bank rules changed.
+
+## Previous version 0.9.0
 
 **No repeated unlock questions until you've completed the pool.** MathGate now records the ID of every successfully claimed mathematical problem, separately for Foundation, Standard and Advanced, and keeps a question from reappearing until the entire 18-question pool at that difficulty has been solved. It also prefers a different subject family—standard integrals, residue theorem, PDE, etc.—from the previous solution whenever possible. At a cycle boundary, the last solved problem is still excluded if another is available.
 
@@ -74,24 +78,22 @@ A meme is selected based on the local day and remains stable for that day, even 
 
 Time comes from Android's usage-event records (UsageStatsManager), not an app-specific stopwatch. Samsung Digital Wellbeing does not expose a public API to its exact displayed counter; small differences may occur.
 
-## Samsung permission denied: how to enable the Accessibility guard
+## Samsung permission denied: correct Accessibility setup order
 
-If the screen says **"App was denied access. Access to this permission can put your personal and financial info at risk"**, Samsung has restricted Accessibility because you installed the app from an APK outside Google Play.
+When MathGate is installed from an APK, Samsung may show **"App was denied access"** the first time you try enabling its Accessibility service. On some One UI builds, **the three-dot option only appears after that first blocked attempt**.
 
-**Fix on Samsung:**
+The in-app first-install wizard now follows the actual four-step Samsung sequence:
 
-1. Tap Close and **leave the Accessibility screen** entirely.
-2. Open **Settings → Apps → MathGate**. This is the main MathGate *App info* page.
-3. Tap the **three-dot menu (⋮)** at the top right.
-4. Choose **Allow restricted settings**, then confirm with your PIN or fingerprint.
-5. Return to **Settings → Accessibility → Installed apps → MathGate Instagram Guard**.
-6. Turn **MathGate Instagram Guard ON**.
-7. Open MathGate and grant **Usage Access** through its setup button, if not granted already.
-8. Return to MathGate and look for **Instagram Guard Active**.
+1. **Usage Access:** Open MathGate's Usage Access settings, find MathGate and enable **Permit usage access**.
+2. **Accessibility — first attempt:** Open **Settings → Accessibility → Installed apps → MathGate Instagram Guard**. Tap the disabled entry / try turning it ON. If Samsung shows **App was denied access** (or Restricted setting), dismiss the warning and return to MathGate.
+3. **App info — allow restricted settings:** Open **Settings → Apps → MathGate → ⋮ → Allow restricted settings**. Authenticate with PIN/fingerprint when prompted. The ⋮ menu can be missing until you've actually attempted step 2. If missing, return to step 2 and trigger the warning.
+4. **Accessibility — second attempt:** Return to **Settings → Accessibility → Installed apps → MathGate Instagram Guard**, turn it **ON**, accept Android's sensitive-permission confirmation, then return to MathGate.
 
-If step 4 is missing, verify that you are on the main *App info* page. Samsung One UI and managed-device policies may vary.
+If Accessibility was enabled directly in step 2 without an error, **steps 3 and 4 are unnecessary**. On some Samsung/Android versions the restricted-settings option may appear differently or not be required.
 
-Accessibility is a sensitive Android permission. MathGate requests only foreground window events and does not request screen content. Review the source before granting it. Android always lets you revoke permission.
+MathGate can verify actual **Usage Access** and **Accessibility service enabled** states. Android does **not** expose a public read API for **Allow restricted settings**, so the app does not falsely mark that action complete merely because App info was opened. The wizard displays navigation milestones and reports success **only when both permissions are actually enabled**.
+
+Accessibility is a sensitive Android permission. Review the [source code](app/src/main/java/dev/mathgate/GateService.kt) and grant it only if you trust the app. Android can revoke it in Settings.
 
 ## Installing / updating the APK
 
@@ -138,7 +140,7 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.9.0**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.9.1**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
 
 ## Repository protection status
 
