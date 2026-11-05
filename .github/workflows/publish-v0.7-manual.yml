@@ -1,0 +1,51 @@
+name: Publish MathGate v0.7.0 direct APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v0.7-manual.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve already successful v0.7.0 APK build
+        run: |
+          set -euo pipefail
+          gh run download 42070365564 --repo fedefirefox/MathGate \
+            --name MathGate-debug-apk --dir /tmp/mathgate
+          test -s /tmp/mathgate/app-debug.apk
+          test "$(stat -c%s /tmp/mathgate/app-debug.apk)" -gt 1000000
+          cp /tmp/mathgate/app-debug.apk MathGate-v0.7.0.apk
+          sha256sum MathGate-v0.7.0.apk > MathGate-v0.7.0.sha256
+          file MathGate-v0.7.0.apk
+      - name: Publish public direct-download APK
+        run: |
+          set -euo pipefail
+          gh release create v0.7.0 \
+            MathGate-v0.7.0.apk \
+            MathGate-v0.7.0.sha256 \
+            --repo fedefirefox/MathGate \
+            --target dddab8d4db72de5dfc1fdb776d19075e7b67870a \
+            --title 'MathGate v0.7.0 — Victory UI fix and in-app updater' \
+            --notes 'The actual Android Victory screen is fixed: full cat meme with preserved aspect ratio and a fixed Claim +5:00 action above Samsung navigation. Includes an in-app updater with SHA-256 and signing-certificate checks. This APK is DEBUG-SIGNED. The current v0.6.0 installation may require uninstalling before installing v0.7.0 due to different certificates. Future in-place upgrades need a permanent release signing certificate; this preview does not solve that by itself. After installation, Android may require enabling Usage Access and Accessibility again.' \
+            --latest
+      - name: Independently download and verify release from public URL
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-delay 2 \
+            --output public.apk \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.7.0/MathGate-v0.7.0.apk
+          EXPECTED="$(cut -d' ' -f1 MathGate-v0.7.0.sha256)"
+          ACTUAL="$(sha256sum public.apk | cut -d' ' -f1)"
+          [ "$EXPECTED" = "$ACTUAL" ]
+          echo "Public APK download verified: $ACTUAL"
