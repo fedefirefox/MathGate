@@ -35,6 +35,10 @@ The APK bundles **two compact AI-generated cat illustrations**, paired with **16
 - **Download new equations from GitHub** in the app; new questions do not require a new APK.
 - **Check for MathGate app updates** through GitHub Releases. Android must still approve APK installation.
 
+## Cat meme image refresh — revision 2 (no reinstall)
+
+The two original 164-pixel cat pictures contained cut-off text inside the image itself. The signed GitHub meme pack now replaces them with wider clean cat images **without any embedded, cropped caption**. The daily silly message remains native app text below the image. To install the pictures in MathGate v0.6/v0.7, open the app and tap **Download AI cat memes from GitHub**. Check that it reports **revision 2**, then reopen the Victory screen. The installed APK and Instagram quota do not change.
+
 ## Meme catalogue and GitHub updates
 
 The editable [cat meme catalogue](app/src/main/assets/cat_memes.json) contains entries with `id`, `image`, `title`, and `message`. To add a new picture, commit a WebP file named `cat_NN.webp` under [app/src/main/assets/memes](app/src/main/assets/memes) and reference its exact filename in the catalogue. Increment top-level `revision` and sign all affected assets using your private key before committing (see [SECURITY.md](SECURITY.md)). In the app, select **Download AI cat memes from GitHub** to retrieve the new data and images. Only the project's fixed GitHub path is accepted. Images are type-, dimensions-, and size-checked; no remote code is executed.
