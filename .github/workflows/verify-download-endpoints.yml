@@ -1,0 +1,31 @@
+name: Verify public download endpoints
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-download-endpoints.yml'
+  workflow_dispatch:
+
+jobs:
+  public-download-smoke-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Verify raw GitHub APK as anonymous HTTPS client
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2 --connect-timeout 20 \
+            --output MathGate-v0.6.0.apk \
+            https://raw.githubusercontent.com/fedefirefox/MathGate/downloads/MathGate-v0.6.0.apk
+          echo '26fa21a792096120cd735080f2777289c9a623a2e11576ec04d854c28fecab2f  MathGate-v0.6.0.apk' | sha256sum --check
+          test "$(stat -c%s MathGate-v0.6.0.apk)" -eq 2488066
+      - name: Verify public release ZIP as anonymous HTTPS client
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2 --connect-timeout 20 \
+            --output MathGate-v0.6.0.zip \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.6.0/MathGate-v0.6.0.zip
+          unzip -t MathGate-v0.6.0.zip
+          unzip -p MathGate-v0.6.0.zip MathGate-v0.6.0.apk | sha256sum | grep -F '26fa21a792096120cd735080f2777289c9a623a2e11576ec04d854c28fecab2f'
