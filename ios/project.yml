@@ -5,13 +5,13 @@ options:
 settings:
   base:
     SWIFT_VERSION: 5.0
-    IPHONEOS_DEPLOYMENT_TARGET: 17.0
+    IPHONEOS_DEPLOYMENT_TARGET: 17.4
     TARGETED_DEVICE_FAMILY: "1,2"
 targets:
   MathGateIOS:
     type: application
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "17.4"
     sources:
       - path: App
       - path: Shared
@@ -32,7 +32,7 @@ targets:
   MathGateMonitor:
     type: app-extension
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "17.4"
     sources:
       - path: Monitor
       - path: Shared
