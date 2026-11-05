@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/publish-android-v0.9.yml'
+      - '.github/workflows/publish-android-v0.9.1.yml'
   workflow_dispatch:
 jobs:
   publish:
@@ -37,7 +37,7 @@ jobs:
             MathGate-v0.9.1.zip \
             --repo fedefirefox/MathGate \
             --target f030240c1feca57eb0b95e0c8a42b25bb3fdb0d9 \
-            --title 'MathGate Android v0.9.1 — No repeating math challenges' \
+            --title 'MathGate Android v0.9.1 — Samsung permission setup fix' \
             --notes 'Android update: corrected Samsung first-time setup order. Usage Access → Accessibility first attempt (trigger the restricted-settings warning) → MathGate App info / three dots / Allow restricted settings → Accessibility again and enable the guard. App info step only appears after opening the Accessibility page; the wizard checks the true permissions. No changes to the 20-minute limit, +5-minute reward or non-repeating math questions. IMPORTANT: development-signed APK; Android may require uninstalling an older build because of signing certificates. No silent bypass.'
       - name: Verify public APK download checksum
         run: |
