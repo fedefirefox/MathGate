@@ -7,7 +7,7 @@ import android.provider.Settings
 import android.text.InputType
 import android.widget.EditText
 
-/** Foreground activity pauses Instagram's usage counter while the user solves math. */
+/** A foreground Activity stops Instagram's foreground clock while mathematics is solved. */
 class ChallengeActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,83 +20,88 @@ class ChallengeActivity : Activity() {
     }
 
     private fun draw() {
-        val page = GateUi.root(this)
-        setContentView(GateUi.scroll(this, page))
-        GateUi.add(page, GateUi.text(this, "●  MATHGATE   /   ACCESS GATE", 13f, GateUi.TEAL, true), bottom = 14)
-        GateUi.add(page, GateUi.text(this, "TIME'S UP.\nEARN +05:00.", 32f, GateUi.INK, true))
+        val screen = GateUi.root(this)
+        setContentView(GateUi.scroll(this, screen))
+        GateUi.add(screen, GateUi.text(this,
+            "●  MATHGATE  /  ACCESS GATE", 13f, GateUi.TEAL, true),
+            bottom = 12)
+        GateUi.add(screen, GateUi.text(this,
+            "TIME'S UP.\nEARN +05:00.", 33f, GateUi.INK, true))
         val used = GateState.usedMs(this)
-        val limit = GateState.allowanceMs(this)
-        GateUi.add(page, GateUi.text(this,
-            if (used >= 0) "Today: ${GateState.timeLabel(used)} of ${GateState.timeLabel(limit)} used"
-            else "Usage permission required",
-            15f, GateUi.MUTED), top = 6, bottom = 20)
+        val allowed = GateState.allowanceMs(this)
+        GateUi.add(screen, GateUi.text(this,
+            if (used < 0) "Usage permission missing"
+            else "Today: " + GateState.timeLabel(used) +
+                " of " + GateState.timeLabel(allowed) + " used",
+            14f, GateUi.MUTED), top = 5, bottom = 18)
 
         if (!GateState.hasUsageAccess(this)) {
-            GateUi.add(page, GateUi.text(this,
-                "MathGate cannot read your Instagram activity until Android Usage Access is enabled. Instagram stays locked.",
+            GateUi.add(screen, GateUi.text(this,
+                "Enable Android Usage Access so MathGate can read Instagram screen time.",
                 16f, GateUi.CORAL), bottom = 12)
-            GateUi.add(page, GateUi.button(this, "Grant Usage Access") {
+            GateUi.add(screen, GateUi.button(this, "Grant Usage Access") {
                 startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
             })
         } else if (!GateState.needsChallenge(this)) {
-            GateUi.add(page, GateUi.text(this,
-                "You have time remaining. No additional problem is required yet.",
+            GateUi.add(screen, GateUi.text(this,
+                "You still have Instagram time available.",
                 16f), bottom = 14)
-            GateUi.add(page, GateUi.button(this, "Open Instagram →") { openInstagram() })
+            GateUi.add(screen, GateUi.button(this,
+                "Open Instagram →") { openInstagram() })
         } else {
-            val problem = GateState.problem(this)
-            val panel = GateUi.panel(this)
-            GateUi.add(panel, GateUi.text(this, problem.topic, 12f, GateUi.TEAL, true), bottom = 12)
-            GateUi.add(panel, GateUi.text(this, problem.prompt, 21f, GateUi.INK, true), bottom = 14)
-            GateUi.add(panel, GateUi.text(this, "ENTER A NUMERIC ANSWER", 12f, GateUi.MUTED, true), bottom = 3)
-            val answer = EditText(this).apply {
-                hint = "e.g. 2.718"
+            val question = GateState.problem(this)
+            val card = GateUi.panel(this)
+            GateUi.add(card, GateUi.text(this,
+                question.topic.uppercase() + "   ·   " +
+                    GateState.difficulty(this).uppercase(),
+                12f, GateUi.TEAL, true), bottom = 12)
+            GateUi.add(card, GateUi.text(this, question.prompt,
+                16f, GateUi.MUTED), bottom = 7)
+            if (question.latex.isNotBlank()) {
+                GateUi.add(card, MathRenderer.create(this, question.latex),
+                    bottom = 10)
+            }
+            GateUi.add(card, GateUi.text(this,
+                "YOUR NUMERICAL ANSWER", 13f, GateUi.INK, true), bottom = 5)
+            val entry = EditText(this).apply {
+                hint = "e.g. 2*pi, sqrt(3)/2, 1.234"
                 setSingleLine(true)
-                textSize = 23f
+                textSize = 20f
                 setTextColor(GateUi.INK)
                 setHintTextColor(GateUi.MUTED)
-                inputType = InputType.TYPE_CLASS_NUMBER or
-                    InputType.TYPE_NUMBER_FLAG_SIGNED or InputType.TYPE_NUMBER_FLAG_DECIMAL
+                inputType = InputType.TYPE_CLASS_TEXT or
+                    InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             }
-            GateUi.add(panel, answer, bottom = 11)
+            GateUi.add(card, entry, bottom = 11)
             val message = GateUi.text(this,
-                "Give the numerical result, not the derivation. Small rounding errors are accepted.",
+                "Type a decimal or an expression using pi, e, sqrt, exp, sin, cos, ln.",
                 13f, GateUi.MUTED)
-            GateUi.add(panel, message, bottom = 12)
-            GateUi.add(panel, GateUi.button(this, "VERIFY ANSWER →", GateUi.LIME, GateUi.INK) {
-                if (problem.check(answer.text.toString())) {
-                    if (GateState.earnFiveMinutes(this)) {
-                        openInstagram()
-                    } else {
-                        draw()
-                    }
+            GateUi.add(card, message, bottom = 12)
+            GateUi.add(card, GateUi.button(this, "VERIFY ANSWER →",
+                GateUi.LIME, GateUi.INK) {
+                if (question.check(entry.text.toString())) {
+                    if (GateState.earnFiveMinutes(this)) openInstagram() else draw()
                 } else {
-                    message.text = "Not correct. Hint: ${problem.hint}"
+                    message.text = "Not correct. Hint: " + question.hint
                     message.setTextColor(GateUi.CORAL)
                 }
             })
-            GateUi.add(page, panel, bottom = 18)
+            GateUi.add(screen, card, bottom = 16)
         }
-
-        GateUi.add(page, GateUi.button(this, "Leave Instagram", GateUi.SOFT, GateUi.INK) {
+        GateUi.add(screen, GateUi.button(this,
+            "Leave Instagram", GateUi.SOFT, GateUi.INK) {
             goHome()
-        }, bottom = 12)
-        GateUi.add(page, GateUi.text(this,
-            "No skip or disable control. The next challenge appears after your new five-minute allowance is exhausted.",
+        }, bottom = 11)
+        GateUi.add(screen, GateUi.text(this,
+            "No skip or pause control. The next question appears when the earned five minutes are used.",
             12f, GateUi.MUTED))
     }
 
     private fun openInstagram() {
         val launch = packageManager.getLaunchIntentForPackage(GateState.INSTAGRAM)
-        if (launch == null) {
-            GateUi.add(
-                findViewById<android.view.ViewGroup>(android.R.id.content)
-                    .getChildAt(0) as? android.widget.LinearLayout ?: return,
-                GateUi.text(this, "Instagram could not be found on this phone.", 14f, GateUi.CORAL)
-            )
-            return
-        }
-        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        if (launch == null) { goHome(); return }
+        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or
+            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         startActivity(launch)
         finish()
     }

@@ -50,6 +50,16 @@ object GateState {
         return prefs(c).getInt("bonuses", 0).coerceAtLeast(0)
     }
 
+    fun difficulty(c: Context): String {
+        val level = prefs(c).getString("difficulty", "standard")
+        return if (level in listOf("foundation", "standard", "advanced")) level!! else "standard"
+    }
+
+    fun setDifficulty(c: Context, level: String) {
+        require(level in listOf("foundation", "standard", "advanced"))
+        prefs(c).edit().putString("difficulty", level).apply()
+    }
+
     fun allowanceMs(c: Context): Long =
         (FREE_MINUTES.toLong() + BONUS_MINUTES.toLong() * bonusCount(c)) * 60_000L
 
@@ -138,7 +148,7 @@ object GateState {
             seed = rng.nextInt(Int.MAX_VALUE - 1) + 1
             p.edit().putInt("challengeSeed", seed).apply()
         }
-        return ProblemBank.generate(seed)
+        return LibraryStore.choose(c, seed, difficulty(c)) ?: ProblemBank.generate(seed)
     }
 
     fun timeLabel(ms: Long): String {
@@ -152,13 +162,17 @@ data class CalculusProblem(
     val topic: String,
     val prompt: String,
     val expected: Double,
-    val hint: String
+    val hint: String,
+    val latex: String = "",
+    val tolerance: Double = 0.0,
+    val level: String = "standard",
+    val id: String = "generated"
 ) {
     fun check(input: String): Boolean {
-        val value = input.trim().replace(',', '.').toDoubleOrNull() ?: return false
+        val value = AnswerParser.parse(input) ?: return false
         if (!value.isFinite()) return false
-        val tolerance = max(0.008, abs(expected) * 0.0015)
-        return abs(value - expected) <= tolerance
+        val threshold = if (tolerance > 0.0) tolerance else max(0.008, abs(expected) * 0.0015)
+        return abs(value - expected) <= threshold
     }
 }
 

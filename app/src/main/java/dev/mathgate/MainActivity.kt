@@ -6,8 +6,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
+import android.widget.LinearLayout
 
 class MainActivity : Activity() {
+    private var feedback: String? = null
+    private var releaseLink: String? = null
+    private var isUpdating = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         GateUi.styleBars(this)
@@ -18,78 +23,184 @@ class MainActivity : Activity() {
         render()
     }
 
-    private fun hasAccessibility(): Boolean {
-        val manager = getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
-        return manager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+    private fun accessibilityEnabled(): Boolean {
+        val mgr = getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
+        return mgr.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
             .any {
                 it.resolveInfo.serviceInfo.packageName == packageName &&
                     it.resolveInfo.serviceInfo.name == GateService::class.java.name
             }
     }
 
-    private fun render() {
-        val page = GateUi.root(this)
-        setContentView(GateUi.scroll(this, page))
-        val access = GateState.hasUsageAccess(this)
-        val guard = hasAccessibility()
-        val used = GateState.usedMs(this)
-        val quota = GateState.allowanceMs(this)
-        val earned = GateState.bonusCount(this)
+    private fun checkQuestions() {
+        if (isUpdating) return
+        isUpdating = true
+        feedback = "Checking GitHub question library…"
+        render()
+        LibraryStore.checkForUpdates(this) { result ->
+            runOnUiThread {
+                isUpdating = false
+                feedback = result
+                render()
+            }
+        }
+    }
 
-        GateUi.add(page, GateUi.text(this, "●  MATHGATE     /     INSTAGRAM", 14f, GateUi.TEAL, true), bottom = 18)
-        GateUi.add(page, GateUi.text(this, "LESS SCROLL.\nMORE SOLVING.", 33f, GateUi.INK, true))
-        GateUi.add(page, GateUi.text(this,
-            "20 minutes included. Each solved calculus challenge earns another 5 minutes.",
-            15f, GateUi.MUTED), bottom = 22)
+    private fun checkApplication() {
+        if (isUpdating) return
+        isUpdating = true
+        feedback = "Checking GitHub app releases…"
+        render()
+        ReleaseChecker.check(this) { result, link ->
+            runOnUiThread {
+                isUpdating = false
+                feedback = result
+                releaseLink = link
+                render()
+            }
+        }
+    }
+
+    private fun render() {
+        val root = GateUi.root(this)
+        setContentView(GateUi.scroll(this, root))
+        val usageOK = GateState.hasUsageAccess(this)
+        val guardOK = accessibilityEnabled()
+        val used = GateState.usedMs(this)
+        val allowance = GateState.allowanceMs(this)
+        val bonus = GateState.bonusCount(this)
+        val level = GateState.difficulty(this)
+        val problemCount = LibraryStore.count(this)
+        val libraryRevision = LibraryStore.revision(this)
+
+        GateUi.add(root, GateUi.text(this, "●   MATHGATE   /   INSTAGRAM",
+            13f, GateUi.TEAL, true), bottom = 13)
+        GateUi.add(root, GateUi.text(this, "LESS SCROLL.\nMORE SOLVING.",
+            33f, GateUi.INK, true))
+        GateUi.add(root, GateUi.text(this,
+            "20 minutes included. Solve a real Analysis I/II problem to earn five more.",
+            15f, GateUi.MUTED), bottom = 21)
 
         val summary = GateUi.panel(this, true)
-        GateUi.add(summary, GateUi.text(this, "TODAY'S INSTAGRAM TIME", 12f, GateUi.LIME, true))
+        GateUi.add(summary, GateUi.text(this, "TODAY'S INSTAGRAM USAGE",
+            12f, GateUi.LIME, true))
         GateUi.add(summary, GateUi.text(this,
-            if (used < 0) "Permission needed" else
-                "${GateState.timeLabel(used)} / ${GateState.timeLabel(quota)}",
-            if (used < 0) 22f else 30f, GateUi.WHITE, true), top = 10, bottom = 10)
+            if (used < 0) "Permission required"
+            else GateState.timeLabel(used) + " / " + GateState.timeLabel(allowance),
+            if (used < 0) 22f else 30f, GateUi.WHITE, true),
+            top = 10, bottom = 9)
         GateUi.add(summary, GateUi.progress(this,
-            if (used >= 0) used.toFloat() / quota else 0f), bottom = 10)
+            if (used < 0) 0f else used.toFloat() / allowance.toFloat()),
+            bottom = 12)
         GateUi.add(summary, GateUi.text(this,
-            if (!access) "Grant Usage Access to read system time"
-            else "${GateState.timeLabel(GateState.remainingMs(this))} remaining • ${earned} challenges solved",
+            if (used < 0) "Usage Access not granted"
+            else GateState.timeLabel(GateState.remainingMs(this)) +
+                " remaining · " + bonus + " equations solved",
             14f, GateUi.WHITE))
-        GateUi.add(page, summary, bottom = 22)
+        GateUi.add(root, summary, bottom = 20)
 
-        val active = access && guard
-        val state = GateUi.panel(this)
-        GateUi.add(state, GateUi.text(this,
-            if (active) "●  LOCK ACTIVE" else "●  SETUP INCOMPLETE",
-            15f, if (active) GateUi.TEAL else GateUi.CORAL, true))
-        GateUi.add(state, GateUi.text(this,
-            if (active) "Instagram is interrupted when today's allowance is exhausted."
-            else "Both Android permissions are necessary for reliable interception.",
+        val active = usageOK && guardOK
+        val status = GateUi.panel(this)
+        GateUi.add(status, GateUi.text(this,
+            if (active) "●   INSTAGRAM GUARD ACTIVE" else "●   GUARD NOT ACTIVE",
+            14f, if (active) GateUi.TEAL else GateUi.CORAL, true))
+        GateUi.add(status, GateUi.text(this,
+            if (active) "MathGate will interrupt Instagram once your allowance is used."
+            else "Both Android permissions are needed. Samsung restricts Accessibility on APKs until you explicitly permit it.",
             14f, GateUi.MUTED))
-        GateUi.add(page, state, bottom = 18)
+        GateUi.add(root, status, bottom = 13)
 
-        GateUi.add(page, GateUi.button(this,
-            if (access) "✓  System Usage Access granted" else "1 · Grant system Usage Access",
-            if (access) GateUi.SOFT else GateUi.INK,
-            if (access) GateUi.INK else GateUi.WHITE) {
-                startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        if (!active) {
+            GateUi.add(root, GateUi.button(this,
+                if (usageOK) "✓ Usage Access enabled" else "1 · Grant Usage Access",
+                if (usageOK) GateUi.SOFT else GateUi.INK,
+                if (usageOK) GateUi.INK else GateUi.WHITE
+            ) { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }, bottom = 8)
+            GateUi.add(root, GateUi.button(this,
+                if (guardOK) "✓ Accessibility guard enabled"
+                else "2 · Enable Instagram guard",
+                if (guardOK) GateUi.SOFT else GateUi.TEAL,
+                if (guardOK) GateUi.INK else GateUi.WHITE
+            ) { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }, bottom = 10)
+            GateUi.add(root, GateUi.text(this,
+                "Samsung setup: Settings → Apps → MathGate → ⋮ → Allow restricted settings. " +
+                    "Return to Accessibility → Installed apps → MathGate Instagram Guard → On.",
+                13f, GateUi.MUTED), bottom = 20)
+        }
+
+        GateUi.add(root, GateUi.text(this, "CHALLENGE DIFFICULTY",
+            14f, GateUi.TEAL, true), bottom = 8)
+        val difficultyBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        listOf(
+            "foundation" to "Foundation",
+            "standard" to "Standard",
+            "advanced" to "Advanced"
+        ).forEach { (value, name) ->
+            val selected = level == value
+            val control = GateUi.button(this, name,
+                if (selected) GateUi.LIME else GateUi.SOFT,
+                GateUi.INK) {
+                GateState.setDifficulty(this, value)
+                render()
+            }
+            difficultyBar.addView(control,
+                LinearLayout.LayoutParams(0, GateUi.dp(this, 55), 1f).apply {
+                    rightMargin = GateUi.dp(this@MainActivity, 4)
+                })
+        }
+        GateUi.add(root, difficultyBar, bottom = 6)
+        GateUi.add(root, GateUi.text(this, when (level) {
+            "foundation" -> "Foundation · refresh key concepts before more difficult work."
+            "advanced" -> "Advanced · nontrivial contour integrals and PDEs, often 5–10 minutes."
+            else -> "Standard · core university-level Analysis I/II, around 5–10 minutes."
+        }, 13f, GateUi.MUTED), bottom = 18)
+
+        val example = try {
+            LibraryStore.current(this).problems.firstOrNull { it.level == level }
+        } catch (_: Exception) { null }
+        if (example != null) {
+            val preview = GateUi.panel(this)
+            GateUi.add(preview, GateUi.text(this,
+                "EQUATION PREVIEW   /   " + example.topic.uppercase(),
+                12f, GateUi.TEAL, true), bottom = 4)
+            GateUi.add(preview, MathRenderer.create(this, example.latex))
+            GateUi.add(root, preview, bottom = 18)
+        }
+
+        GateUi.add(root, GateUi.text(this, "QUESTION LIBRARY",
+            14f, GateUi.TEAL, true), bottom = 5)
+        GateUi.add(root, GateUi.text(this,
+            problemCount.toString() + " exercises · library revision " +
+                libraryRevision + " · rendered offline",
+            14f, GateUi.MUTED), bottom = 11)
+        GateUi.add(root, GateUi.button(this,
+            "↻  Download new equations from GitHub",
+            GateUi.TEAL, GateUi.WHITE) { checkQuestions() }, bottom = 8)
+        GateUi.add(root, GateUi.button(this,
+            "Check for MathGate app update", GateUi.SOFT, GateUi.INK) {
+            checkApplication()
         }, bottom = 8)
-        GateUi.add(page, GateUi.button(this,
-            if (guard) "✓  Instagram guard enabled" else "2 · Enable Instagram guard",
-            if (guard) GateUi.SOFT else GateUi.TEAL,
-            if (guard) GateUi.INK else GateUi.WHITE) {
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        }, bottom = 22)
+        feedback?.let {
+            GateUi.add(root, GateUi.text(this, it, 13f,
+                GateUi.MUTED), bottom = 7)
+        }
+        releaseLink?.let { link ->
+            GateUi.add(root, GateUi.button(this,
+                "Open GitHub download page", GateUi.SOFT, GateUi.INK) {
+                ReleaseChecker.open(this, link)
+            }, bottom = 8)
+        }
 
-        GateUi.add(page, GateUi.text(this, "THE RULES", 13f, GateUi.TEAL, true), bottom = 5)
-        GateUi.add(page, GateUi.text(this,
-            "01   20 minutes of Instagram free each day.\n" +
-            "02   At the limit, MathGate opens a full-screen equation.\n" +
-            "03   Correct numeric answer = +5 minutes.\n" +
-            "04   Repeat when the earned time runs out.",
-            15f, GateUi.INK), bottom = 16)
-        GateUi.add(page, GateUi.text(this,
-            "There is no in-app pause/disable switch. Android Settings can still revoke permissions, and uninstalling removes the guard. System usage events are used; Samsung Digital Wellbeing totals can differ slightly.",
-            12f, GateUi.MUTED), bottom = 8)
-        GateUi.add(page, GateUi.button(this, "Refresh usage", GateUi.SOFT, GateUi.INK) { render() })
+        GateUi.add(root, GateUi.text(this, "NO SKIP. NO IN-APP DISABLE.",
+            13f, GateUi.TEAL, true), top = 16, bottom = 5)
+        GateUi.add(root, GateUi.text(this,
+            "Your earned minutes remain available across Instagram sessions until midnight. " +
+                "Difficulty changes never reset the quota. Android can still revoke permissions " +
+                "or uninstall a third-party app.",
+            13f, GateUi.MUTED), bottom = 12)
+        GateUi.add(root, GateUi.button(this, "Refresh usage",
+            GateUi.SOFT, GateUi.INK) { render() })
     }
 }
