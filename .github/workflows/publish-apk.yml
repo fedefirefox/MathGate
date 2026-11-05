@@ -1,0 +1,50 @@
+name: Publish MathGate APK (direct download)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  release-apk:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        run: |
+          echo "y" | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Validate problem and meme libraries
+        run: |
+          python3 tools/validate_problem_bank.py
+          python3 tools/validate_cat_memes.py
+          python3 tools/verify_assets.py
+      - name: Build installable APK
+        run: gradle --no-daemon assembleDebug
+      - name: Prepare release APK and checksum
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk MathGate-v0.6.0.apk
+          sha256sum MathGate-v0.6.0.apk > MathGate-v0.6.0.sha256
+          test -s MathGate-v0.6.0.apk
+      - name: Publish direct-download GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.6.0 \
+            MathGate-v0.6.0.apk \
+            MathGate-v0.6.0.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "MathGate v0.6.0 — Android APK (development preview)" \
+            --notes "Direct-download Android APK. Built from public source after question, cat-meme, and owner-signature checks. On Samsung enable Usage Access and Accessibility restricted settings. IMPORTANT: this is a debug-signed preview; Android may require uninstalling a previous MathGate build because the certificate changes between builds. Not yet physically tested on Samsung. No app permissions can be bypassed automatically." \
+            --latest
