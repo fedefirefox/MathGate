@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "revision": 1,
-  "description": "MathGate engineering Analysis I/II. Offline problems; add new entries and increment revision to deliver bank updates through the app.",
+  "revision": 2,
+  "description": "54 curated problems: balanced university Analysis I/II, standard integrals, PDEs and complex analysis. GitHub-downloadable without an app reinstall.",
   "problems": [
     {
       "id": "F01",
@@ -362,6 +362,186 @@
       "answer": 0.2725317930340126,
       "tolerance": 0.01,
       "hint": "The decay rate of a 2D sine eigenmode is kₓ²+kᵧ²."
+    },
+    {
+      "id": "F13",
+      "level": "foundation",
+      "topic": "Standard integrals · Polynomial",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}(3x^{2}+2x)\\,dx",
+      "answer": 2,
+      "tolerance": 0.008,
+      "hint": "Integrate each monomial using the power rule."
+    },
+    {
+      "id": "F14",
+      "level": "foundation",
+      "topic": "Standard integrals · Trigonometric",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\pi}\\sin x\\,dx",
+      "answer": 2,
+      "tolerance": 0.008,
+      "hint": "An antiderivative of sin(x) is −cos(x)."
+    },
+    {
+      "id": "F15",
+      "level": "foundation",
+      "topic": "Standard integrals · Substitution",
+      "prompt": "Evaluate the integral. Enter a decimal or expression in e.",
+      "latex": "\\int_{0}^{1}xe^{x^{2}}\\,dx",
+      "answer": 0.8591409142295225,
+      "tolerance": 0.008,
+      "hint": "Set u=x² and transform both integration limits."
+    },
+    {
+      "id": "F16",
+      "level": "foundation",
+      "topic": "Standard integrals · Trigonometric identity",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}\\sin^{2}x\\,dx",
+      "answer": 0.7853981633974483,
+      "tolerance": 0.008,
+      "hint": "Use the double-angle identity sin²x=(1−cos2x)/2."
+    },
+    {
+      "id": "F17",
+      "level": "foundation",
+      "topic": "Standard integrals · Logarithms",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{1}^{e}\\frac{\\ln x}{x}\\,dx",
+      "answer": 0.5,
+      "tolerance": 0.008,
+      "hint": "Substitute u=ln x."
+    },
+    {
+      "id": "F18",
+      "level": "foundation",
+      "topic": "Standard integrals · Powers",
+      "prompt": "Evaluate the integral.",
+      "latex": "\\int_{0}^{2}(x^{2}+1)\\,dx",
+      "answer": 4.666666666666667,
+      "tolerance": 0.008,
+      "hint": "Apply the fundamental theorem of calculus to x³/3 + x."
+    },
+    {
+      "id": "S13",
+      "level": "standard",
+      "topic": "Standard integrals · Integration by parts",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}x^{2}e^x\\,dx",
+      "answer": 0.7182818284590451,
+      "tolerance": 0.008,
+      "hint": "Integrate by parts twice."
+    },
+    {
+      "id": "S14",
+      "level": "standard",
+      "topic": "Standard integrals · Logarithm",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}\\ln(1+x)\\,dx",
+      "answer": 0.3862943611198906,
+      "tolerance": 0.008,
+      "hint": "Integrate by parts, using v=x+1."
+    },
+    {
+      "id": "S15",
+      "level": "standard",
+      "topic": "Standard integrals · Integration by parts",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}x\\sin x\\,dx",
+      "answer": 1,
+      "tolerance": 0.008,
+      "hint": "Choose u=x and dv=sin(x)dx."
+    },
+    {
+      "id": "S16",
+      "level": "standard",
+      "topic": "Standard integrals · Rational function",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}\\frac{1}{1+x^{2}}\\,dx",
+      "answer": 0.7853981633974483,
+      "tolerance": 0.008,
+      "hint": "Use the inverse tangent antiderivative."
+    },
+    {
+      "id": "S17",
+      "level": "standard",
+      "topic": "Standard integrals · Rational substitution",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{1}\\frac{x^{3}}{1+x^{2}}\\,dx",
+      "answer": 0.15342640972002736,
+      "tolerance": 0.008,
+      "hint": "First divide x³ by (1+x²), then integrate."
+    },
+    {
+      "id": "S18",
+      "level": "standard",
+      "topic": "Standard integrals · Trig reduction",
+      "prompt": "Evaluate the definite integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}\\sin^{3}x\\,dx",
+      "answer": 0.6666666666666666,
+      "tolerance": 0.008,
+      "hint": "Use sin³x=sin x(1−cos²x) and substitute u=cos x."
+    },
+    {
+      "id": "A13",
+      "level": "advanced",
+      "topic": "Improper integrals · Quartic denominator",
+      "prompt": "Evaluate this improper integral, by residues or an appropriate real-variable method.",
+      "latex": "\\int_{0}^{\\infty}\\frac{dx}{x^{4}+1}",
+      "answer": 1.1107207345395915,
+      "tolerance": 0.008,
+      "hint": "Use the known full-line quartic integral, or partial fractions with real quadratic factors."
+    },
+    {
+      "id": "A14",
+      "level": "advanced",
+      "topic": "Improper integrals · Logarithmic square",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{1}\\ln^{2}(x)\\,dx",
+      "answer": 2,
+      "tolerance": 0.008,
+      "hint": "Differentiate a parameter integral or use the Gamma-function identity."
+    },
+    {
+      "id": "A15",
+      "level": "advanced",
+      "topic": "Improper integrals · Log sine",
+      "prompt": "Evaluate the definite improper integral.",
+      "latex": "\\int_{0}^{\\frac{\\pi}{2}}\\ln(\\sin x)\\,dx",
+      "answer": -1.088793045151801,
+      "tolerance": 0.008,
+      "hint": "Use the reflection x↦π/2−x and the double-angle identity."
+    },
+    {
+      "id": "A16",
+      "level": "advanced",
+      "topic": "Improper integrals · Alternating series",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{1}\\frac{\\ln x}{1+x}\\,dx",
+      "answer": -0.8224670334241132,
+      "tolerance": 0.008,
+      "hint": "Expand 1/(1+x) as a power series on [0,1) and justify termwise integration."
+    },
+    {
+      "id": "A17",
+      "level": "advanced",
+      "topic": "Improper integrals · Laplace transform",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{\\infty}xe^{-x}\\sin x\\,dx",
+      "answer": 0.5,
+      "tolerance": 0.008,
+      "hint": "Take the imaginary part of ∫₀∞ x exp(−(1−i)x)dx."
+    },
+    {
+      "id": "A18",
+      "level": "advanced",
+      "topic": "Improper integrals · Bose integral",
+      "prompt": "Evaluate the improper integral.",
+      "latex": "\\int_{0}^{\\infty}\\frac{x^{3}}{e^{x}-1}\\,dx",
+      "answer": 6.493939402266828,
+      "tolerance": 0.008,
+      "hint": "Expand 1/(e^x−1) as a positive exponential series and use ζ(4)."
     }
   ]
 }
