@@ -1,0 +1,51 @@
+name: Publish MathGate Android v0.9.2 (blocking fix)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-android-v0.9.2.yml'
+  workflow_dispatch:
+jobs:
+  publish:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve tested Android v0.9.2 APK
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mathgate-v092
+          gh run download 42334709979 --repo fedefirefox/MathGate \
+            --name MathGate-debug-apk --dir /tmp/mathgate-v092
+          test -s /tmp/mathgate-v092/app-debug.apk
+          cp /tmp/mathgate-v092/app-debug.apk MathGate-v0.9.2.apk
+          sha256sum MathGate-v0.9.2.apk > MathGate-v0.9.2.sha256
+          file MathGate-v0.9.2.apk
+          test "$(stat -c%s MathGate-v0.9.2.apk)" -gt 1000000
+      - name: Publish direct APK and ZIP fallback
+        run: |
+          set -euo pipefail
+          zip -9 MathGate-v0.9.2.zip MathGate-v0.9.2.apk MathGate-v0.9.2.sha256
+          gh release create v0.9.2 \
+            MathGate-v0.9.2.apk \
+            MathGate-v0.9.2.sha256 \
+            MathGate-v0.9.2.zip \
+            --repo fedefirefox/MathGate \
+            --target a057ca09066498f180121d1d3ce7389cd1902437 \
+            --title 'MathGate Android v0.9.2 — Instagram blocking fix' \
+            --notes 'Fixes a critical Instagram enforcement weakness. Uses a full-screen Accessibility overlay instead of background Activity launch, restores foreground detection from Android usage events, cross-checks daily time, reports guard heartbeat, and adds a 90-second Lock Test from the dashboard. Five unit tests cover blocking rules, including 20-minute expiration, +5 minutes, missing permissions, and test mode. Note: real Samsung device verification is still required. This is a debug-signed development APK, so your current installation may require uninstalling first due to signature mismatch. Your question/meme library and reward behavior remain intact.'
+      - name: Independently verify public APK download and checksum
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-delay 2 \
+            --output downloaded.apk \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.9.2/MathGate-v0.9.2.apk
+          EXPECTED="$(cut -d' ' -f1 MathGate-v0.9.2.sha256)"
+          ACTUAL="$(sha256sum downloaded.apk | cut -d' ' -f1)"
+          [ "$EXPECTED" = "$ACTUAL" ]
+          echo "Public APK download verified: $ACTUAL"
