@@ -9,7 +9,19 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.9.1?
+## What's in version 0.9.2? — Android blocking reliability
+
+**Important reliability fix:** Previous versions could stop watching Instagram after a window-state event and attempted to launch a challenge Activity directly from an Android background service. On recent Samsung/Android firmware, background Activity launches may be ignored without an exception. This could leave Instagram open long past the 20-minute daily allowance.
+
+Version 0.9.2 uses a **full-screen Accessibility overlay** to cover Instagram when the allowance expires. It prevents interacting with the Instagram screen and offers a button to open MathGate's calculus challenge via a user-initiated tap. It also recovers the foreground app from Android system usage events, compares reconstructed usage against Android's daily aggregate, and blocks when Usage Access is missing. If drawing an overlay fails, it attempts to navigate HOME instead of silently permitting Instagram. These are best-effort system APIs, not device-owner guarantees.
+
+**Check protection immediately:** Open MathGate and use **TEST LOCK NOW · no need to wait 20 min**. This opens Instagram and demands a 90-second temporary overlay. You should see a MathGate test screen within a few seconds, without using up or granting any extra minutes. Return to MathGate: the dashboard reports the service heartbeat, last Instagram detection, last successful block, and last error/action. A green Android permission switch alone is *not* treated as proof the background monitor is responding.
+
+**If the test fails:** check MathGate's Accessibility and Usage Access settings. Disable and re-enable **MathGate Instagram Guard** in Settings → Accessibility → Installed apps. On Samsung, you can also review **Settings → Apps → MathGate → Battery**, and consider **Unrestricted** if the system is suspending the service. If its heartbeat is still stale or it never detects Instagram, the guard is not verified on this device.
+
+An Accessibility-based app still cannot make itself impossible to disable: the user or OS can revoke permission, force-stop, uninstall or otherwise prevent it from running. This feature is not a substitute for a device-owner policy or Samsung's native app timer when enforcement must be guaranteed.
+
+## Previous version 0.9.1
 
 **Correct Samsung installation order:** The first-run wizard now follows **Accessibility (attempt/trigger warning) → MathGate App info (⋮ Allow restricted settings) → Accessibility again (enable)**, after Usage Access. This fixes the missing three-dot menu on Samsung firmware that only exposes the option after the first blocked Accessibility attempt. Only actual Android permission states determine completion. No Instagram timer or equation-bank rules changed.
 
@@ -140,7 +152,7 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.9.1**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.9.2**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
 
 ## Repository protection status
 

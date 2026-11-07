@@ -71,6 +71,29 @@ class MainActivity : Activity() {
             }
     }
 
+    private fun testInstagramBlock() {
+        if (!GateState.hasUsageAccess(this) || !accessibilityEnabled()) {
+            feedback = "Both Android permissions are needed to test the Instagram guard."
+            render(preserveScroll = true)
+            return
+        }
+        val launch = packageManager.getLaunchIntentForPackage(GateState.INSTAGRAM)
+        if (launch == null) {
+            feedback = "Instagram app not found. This guard only supports com.instagram.android."
+            render(preserveScroll = true)
+            return
+        }
+        // Temporary stricter test, never a relaxation of the daily allowance.
+        GateDiagnostics.startLockTest(this)
+        try {
+            startActivity(launch)
+        } catch (error: Exception) {
+            GateDiagnostics.endLockTest(this)
+            feedback = "Cannot launch Instagram for the lock test: " + error.message
+            render(preserveScroll = true)
+        }
+    }
+
     private fun checkQuestions() {
         if (isUpdating) return
         isUpdating = true
@@ -177,33 +200,56 @@ class MainActivity : Activity() {
             startActivity(Intent(this, SetupActivity::class.java))
         }, bottom = 12)
 
-        val active = usageOK && guardOK
+        val permitted = usageOK && guardOK
+        val running = GateDiagnostics.serviceResponsive(this)
+        val active = permitted && running
         val status = GateUi.panel(this)
         GateUi.add(status, GateUi.text(this,
-            if (active) "●   INSTAGRAM GUARD ACTIVE" else "●   GUARD NOT ACTIVE",
+            when {
+                !permitted -> "●  INSTAGRAM GUARD NOT CONFIGURED"
+                !running -> "●  WARNING: SERVICE NOT RESPONDING"
+                else -> "●  GUARD SERVICE RUNNING"
+            },
             14f, if (active) GateUi.TEAL else GateUi.CORAL, true))
         GateUi.add(status, GateUi.text(this,
-            if (active) "MathGate will interrupt Instagram once your allowance is used."
-            else "Both Android permissions are needed. Samsung restricts Accessibility on APKs until you explicitly permit it.",
-            14f, GateUi.MUTED))
+            when {
+                !permitted -> "Usage Access and Accessibility permission are both required."
+                !running -> "Accessibility is enabled, but its background monitoring loop has no recent heartbeat. Toggle MathGate Instagram Guard OFF and ON in Accessibility settings."
+                else -> "The service is responding. Use Test lock now to verify that Instagram is actually covered on your Samsung."
+            }, 14f, GateUi.MUTED), bottom = 8)
+        GateUi.add(status, GateUi.text(this,
+            "Service heartbeat: " + GateDiagnostics.elapsedLabel(
+                GateDiagnostics.lastHeartbeatMs(this)) +
+            "\nInstagram last detected: " + GateDiagnostics.elapsedLabel(
+                GateDiagnostics.lastInstagramAt(this)) +
+            "\nLast blocked: " + GateDiagnostics.elapsedLabel(
+                GateDiagnostics.lastOverlayAt(this)) +
+            "\nLast action: " + GateDiagnostics.lastAction(this),
+            12f, GateUi.MUTED))
         GateUi.add(root, status, bottom = 13)
 
-        if (!active) {
+        if (!permitted) {
             GateUi.add(root, GateUi.button(this,
-                if (usageOK) "✓ Usage Access enabled" else "1 · Grant Usage Access",
-                if (usageOK) GateUi.SOFT else GateUi.INK,
-                if (usageOK) GateUi.INK else GateUi.WHITE
-            ) { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }, bottom = 8)
+                "Review Samsung permission setup",
+                GateUi.TEAL, GateUi.WHITE) {
+                startActivity(Intent(this, SetupActivity::class.java))
+            }, bottom = 12)
+        } else {
+            if (!running) {
+                GateUi.add(root, GateUi.button(this,
+                    "Restart guard in Accessibility settings",
+                    GateUi.CORAL, GateUi.WHITE) {
+                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                }, bottom = 10)
+            }
             GateUi.add(root, GateUi.button(this,
-                if (guardOK) "✓ Accessibility guard enabled"
-                else "2 · Enable Instagram guard",
-                if (guardOK) GateUi.SOFT else GateUi.TEAL,
-                if (guardOK) GateUi.INK else GateUi.WHITE
-            ) { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }, bottom = 10)
+                "TEST LOCK NOW · no need to wait 20 min",
+                GateUi.LIME, GateUi.INK) {
+                testInstagramBlock()
+            }, bottom = 9)
             GateUi.add(root, GateUi.text(this,
-                "Samsung setup: Settings → Apps → MathGate → ⋮ → Allow restricted settings. " +
-                    "Return to Accessibility → Installed apps → MathGate Instagram Guard → On.",
-                13f, GateUi.MUTED), bottom = 20)
+                "Opens Instagram and requests a temporary 90-second block. A full-screen MathGate lock should cover it within a few seconds. Test mode never adds Instagram minutes. Return to MathGate to inspect the last blocked time.",
+                13f, GateUi.MUTED), bottom = 14)
         }
 
         GateUi.add(root, GateUi.text(this, "CHALLENGE DIFFICULTY",

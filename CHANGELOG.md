@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.2 — Instagram enforcement and diagnostics
+- Replaced background Activity launch with a touch-intercepting TYPE_ACCESSIBILITY_OVERLAY on Instagram when the allowance expires.
+- Added Android usage-event foreground recovery rather than trusting a single volatile Accessibility event flag.
+- Daily usage now considers both timestamped usage events and Android's aggregate foreground-duration records to avoid missed intervals.
+- Fail-closed behavior when Usage Access is missing; attempt HOME if overlay creation fails.
+- Added Accessibility service heartbeat, last Instagram detection, last successful block and error/action telemetry on the dashboard (local only).
+- Added a **TEST LOCK NOW** button to simulate a temporary block for 90 seconds, without consuming time or granting a bonus.
+- Added threshold, extension, missing-permission, test-mode and lock-screen unit tests.
+- Preserved 20-minute base, +5-minute math unlocks, non-repeating problem IDs and cat reward.
+
 ## v0.9.1 — Samsung Accessibility setup order
 - First-time wizard now follows Usage Access → Accessibility FIRST (trigger restricted-setting denial) → App info / ⋮ Allow restricted settings → Accessibility AGAIN (enable).
 - Treat opening Settings screens as guidance only. Setup only reports success after actual Usage Access and Accessibility are granted.

@@ -119,10 +119,48 @@ object GateState {
             }
         }
         close(now)
+
+        // Samsung's aggregate may include intervals that an event reconstruction
+        // misses (e.g., short activity transitions). Never undercount due to the
+        // former event-only implementation. The app displays the chosen total.
+        val summary = try {
+            usage.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, midnight, now)
+                ?.filter { it.packageName == INSTAGRAM }
+                ?.maxOfOrNull { it.totalTimeInForeground } ?: 0L
+        } catch (_: Exception) { 0L }
         cachedDay = day
         cachedAt = nowTick
-        cachedUsage = total.coerceAtLeast(0L)
+        cachedUsage = max(total.coerceAtLeast(0L), summary.coerceAtLeast(0L))
         return cachedUsage
+    }
+
+    /**
+     * Reconstruct which package currently owns the foreground from Android's
+     * ACTIVITY_RESUMED/PAUSED stream. This recovers a dropped Accessibility
+     * window event and does not rely on one mutable isInstagram flag.
+     */
+    fun foregroundPackage(c: Context): String? {
+        if (!hasUsageAccess(c)) return null
+        val now = System.currentTimeMillis()
+        val midnight = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
+        val manager = c.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = manager.queryEvents(midnight, now) ?: return null
+        val event = UsageEvents.Event()
+        var foreground: String? = null
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            when (event.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> foreground = event.packageName
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED ->
+                    if (foreground == event.packageName) foreground = null
+                UsageEvents.Event.KEYGUARD_SHOWN,
+                UsageEvents.Event.SCREEN_NON_INTERACTIVE,
+                UsageEvents.Event.DEVICE_SHUTDOWN -> foreground = null
+            }
+        }
+        return foreground
     }
 
     fun remainingMs(c: Context): Long {
