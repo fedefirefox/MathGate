@@ -1,0 +1,28 @@
+name: Release workbench
+on:
+  push:
+    branches: ['release/v1.1.0']
+    paths: ['.github/workflows/release-workbench.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export public source and Android signature verifier
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/workbench
+          git archive --format=zip HEAD -o /tmp/workbench/source.zip
+          sdkmanager "build-tools;35.0.0" >/dev/null
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" /tmp/workbench/apksigner.jar
+          git rev-parse HEAD > /tmp/workbench/source-commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-workbench
+          path: /tmp/workbench/
+          retention-days: 7
