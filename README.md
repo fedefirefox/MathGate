@@ -9,7 +9,19 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.9.2? — Android blocking reliability
+## What's in version 0.9.3? — Midnight reset repair
+
+**Fixes previous-day Instagram usage surviving local midnight.** MathGate v0.9.2 combined timestamped foreground events with pre-aggregated Android daily usage buckets. Android documents that its daily usage query may expand the requested range to whole interval periods. Taking the maximum could therefore carry yesterday's usage into today.
+
+Version 0.9.3 **removes the daily aggregate entirely** and calculates today's Instagram usage only from timestamped foreground events, clipped to **today's local midnight**. It looks back to the previous local midnight (not a fixed 24 hours) to recognize sessions crossing midnight, including DST transitions. Yesterday's Instagram time no longer consumes today's allowance; if Instagram remains open across midnight, only the post-midnight portion counts.
+
+The app dashboard now displays the current local calendar day and refreshes automatically after midnight while open. The Accessibility guard's foreground recovery also looks back across midnight. Earned five-minute bonuses and pending rewards reset at local day change; completed-question history remains saved.
+
+**Quick verification:** At 00:01, open MathGate. The new day's usage should start at **0:00** if Instagram wasn't used after midnight, or show only the minutes since midnight if Instagram stayed open. Available allowance returns to 20 minutes before additional earned rewards. Samsung Digital Wellbeing may still use a slightly different accounting method.
+
+Ten JVM regression tests cover yesterday carryover, midnight-spanning usage, local DST days, screen locking, and foreground recovery. A successful build does not replace a Samsung device test.
+
+## Previous version 0.9.2 — Android blocking reliability
 
 **Important reliability fix:** Previous versions could stop watching Instagram after a window-state event and attempted to launch a challenge Activity directly from an Android background service. On recent Samsung/Android firmware, background Activity launches may be ignored without an exception. This could leave Instagram open long past the 20-minute daily allowance.
 
@@ -152,7 +164,7 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.9.2**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.9.3**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
 
 ## Repository protection status
 

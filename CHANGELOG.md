@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.3 — Correct midnight rollover and daily usage window
+- Removed pre-aggregated Android daily usage statistics that can include expanded intervals outside the requested midnight boundary.
+- Derive today's Instagram foreground time from timestamped events clipped to local midnight, with previous-local-day lookback for sessions spanning midnight.
+- Account for 23- or 25-hour local days and foreground Instagram activity begun before midnight.
+- Automatically refresh the dashboard at midnight and display the local calendar day.
+- Reset daily earned minutes and pending rewards on date change, retaining completed-problem history.
+- Added ten unit tests for midnight rollover, screen-off, resumed sessions, and DST transitions.
+- Preserved 20 minutes free, +5 minutes per solved challenge, and Accessibility overlay.
+
 ## v0.9.2 — Instagram enforcement and diagnostics
 - Replaced background Activity launch with a touch-intercepting TYPE_ACCESSIBILITY_OVERLAY on Instagram when the allowance expires.
 - Added Android usage-event foreground recovery rather than trusting a single volatile Accessibility event flag.

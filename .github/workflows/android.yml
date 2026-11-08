@@ -28,6 +28,16 @@ jobs:
         run: python3 tools/validate_cat_memes.py
       - name: Verify owner signature and checksums
         run: python3 tools/verify_assets.py
+      - name: Prevent expanded daily UsageStats regression
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          code = Path("app/src/main/java/dev/mathgate/GateState.kt").read_text()
+          assert ".queryUsageStats(" not in code, "Expanded aggregate may include yesterday"
+          assert "DailyUsageCalculator.todayMs(" in code
+          assert "DailyUsageCalculator.previousLocalMidnight(" in code
+          print("Midnight-boundary implementation checked")
+          PY
       - name: Unit-test non-repeating question selection
         run: gradle --no-daemon testDebugUnitTest
       - name: Build debug APK

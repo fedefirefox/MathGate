@@ -25,6 +25,7 @@ object GateState {
     private const val PREFS = "mathgate_v2"
     private val rng = SecureRandom()
     private var cachedDay = ""
+    private var cachedZone = ""
     private var cachedAt = 0L
     private var cachedUsage = 0L
 
@@ -48,7 +49,9 @@ object GateState {
                 .remove("activeProblemFamily")
                 .remove("rewardTicket")
                 .remove("rewardProblem")
-                .apply()
+                .remove("rewardLevel")
+                .remove("rewardFamily")
+                .commit()
         }
     }
 
@@ -70,97 +73,83 @@ object GateState {
     fun allowanceMs(c: Context): Long =
         (FREE_MINUTES.toLong() + BONUS_MINUTES.toLong() * bonusCount(c)) * 60_000L
 
-    /** ACTIVITY_RESUMED / PAUSED event intervals, clipped to local midnight.
-     * Reading an event window starting 24h earlier handles sessions crossing midnight.
-     * Results may differ slightly from the Digital Wellbeing UI on some Samsung builds.
+    /**
+     * Today's usage is derived from *events* and clipped to today's local
+     * midnight. Never max it with an INTERVAL_DAILY UsageStats bucket: Android
+     * explicitly allows queryUsageStats() to expand its requested time range
+     * to interval boundaries, carrying yesterday's usage past midnight.
+     *
+     * Look back to the previous local midnight for sessions that span 00:00.
      */
     @Synchronized
     fun usedMs(c: Context): Long {
         if (!hasUsageAccess(c)) return -1L
-        val day = today()
-        val nowTick = SystemClock.elapsedRealtime()
-        if (day == cachedDay && nowTick >= cachedAt && nowTick - cachedAt < 1000L) {
+        val now = System.currentTimeMillis()
+        val zone = ZoneId.systemDefault()
+        val midnight = DailyUsageCalculator.localMidnight(now, zone)
+        val yesterdayStart = DailyUsageCalculator.previousLocalMidnight(now, zone)
+        val day = java.time.Instant.ofEpochMilli(now)
+            .atZone(zone).toLocalDate().toString()
+        val zoneKey = zone.id
+        val tick = SystemClock.elapsedRealtime()
+        if (day == cachedDay && zoneKey == cachedZone &&
+            tick >= cachedAt && tick - cachedAt < 1000L) {
             return cachedUsage
         }
-        val now = System.currentTimeMillis()
-        val midnight = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
-            .toInstant().toEpochMilli()
-        val usage = c.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val events = usage.queryEvents(midnight - 86_400_000L, now) ?: return -1L
+        val manager = c.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val eventStream = try {
+            manager.queryEvents(yesterdayStart, now)
+        } catch (_: SecurityException) {
+            null
+        } ?: return -1L
         val event = UsageEvents.Event()
-        var openAt: Long? = null
-        var total = 0L
-
-        fun close(at: Long) {
-            val start = openAt ?: return
-            val clippedStart = max(midnight, start)
-            val clippedEnd = at.coerceAtMost(now)
-            if (clippedEnd > clippedStart) total += clippedEnd - clippedStart
-            openAt = null
+        val entries = ArrayList<DailyUsageCalculator.Event>()
+        while (eventStream.hasNextEvent()) {
+            eventStream.getNextEvent(event)
+            entries.add(DailyUsageCalculator.Event(
+                event.timeStamp,
+                event.packageName,
+                event.eventType
+            ))
         }
-
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            val time = event.timeStamp
-            when (event.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> {
-                    if (event.packageName == INSTAGRAM) {
-                        if (openAt == null) openAt = time
-                    } else if (openAt != null) {
-                        close(time)
-                    }
-                }
-                UsageEvents.Event.ACTIVITY_PAUSED,
-                UsageEvents.Event.ACTIVITY_STOPPED ->
-                    if (event.packageName == INSTAGRAM) close(time)
-                UsageEvents.Event.SCREEN_NON_INTERACTIVE,
-                UsageEvents.Event.KEYGUARD_SHOWN,
-                UsageEvents.Event.DEVICE_SHUTDOWN -> close(time)
-            }
-        }
-        close(now)
-
-        // Samsung's aggregate may include intervals that an event reconstruction
-        // misses (e.g., short activity transitions). Never undercount due to the
-        // former event-only implementation. The app displays the chosen total.
-        val summary = try {
-            usage.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, midnight, now)
-                ?.filter { it.packageName == INSTAGRAM }
-                ?.maxOfOrNull { it.totalTimeInForeground } ?: 0L
-        } catch (_: Exception) { 0L }
+        val calculated = DailyUsageCalculator.todayMs(
+            entries, midnight, now, INSTAGRAM
+        )
         cachedDay = day
-        cachedAt = nowTick
-        cachedUsage = max(total.coerceAtLeast(0L), summary.coerceAtLeast(0L))
-        return cachedUsage
+        cachedZone = zoneKey
+        cachedAt = tick
+        cachedUsage = calculated
+        return calculated
     }
 
     /**
-     * Reconstruct which package currently owns the foreground from Android's
-     * ACTIVITY_RESUMED/PAUSED stream. This recovers a dropped Accessibility
-     * window event and does not rely on one mutable isInstagram flag.
+     * The active app may have resumed *before* midnight. Query the previous
+     * local day's events so the guard still recognizes Instagram at 00:01,
+     * even when there was no new Accessibility window event after midnight.
      */
     fun foregroundPackage(c: Context): String? {
         if (!hasUsageAccess(c)) return null
         val now = System.currentTimeMillis()
-        val midnight = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
-            .toInstant().toEpochMilli()
+        val from = DailyUsageCalculator.previousLocalMidnight(
+            now, ZoneId.systemDefault()
+        )
         val manager = c.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val events = manager.queryEvents(midnight, now) ?: return null
+        val events = try {
+            manager.queryEvents(from, now)
+        } catch (_: SecurityException) {
+            null
+        } ?: return null
         val event = UsageEvents.Event()
-        var foreground: String? = null
+        val entries = ArrayList<DailyUsageCalculator.Event>()
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            when (event.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> foreground = event.packageName
-                UsageEvents.Event.ACTIVITY_PAUSED,
-                UsageEvents.Event.ACTIVITY_STOPPED ->
-                    if (foreground == event.packageName) foreground = null
-                UsageEvents.Event.KEYGUARD_SHOWN,
-                UsageEvents.Event.SCREEN_NON_INTERACTIVE,
-                UsageEvents.Event.DEVICE_SHUTDOWN -> foreground = null
-            }
+            entries.add(DailyUsageCalculator.Event(
+                event.timeStamp,
+                event.packageName,
+                event.eventType
+            ))
         }
-        return foreground
+        return DailyUsageCalculator.foreground(entries)
     }
 
     fun remainingMs(c: Context): Long {

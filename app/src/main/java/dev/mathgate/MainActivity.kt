@@ -6,6 +6,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import java.time.ZoneId
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import android.view.accessibility.AccessibilityManager
 import android.widget.LinearLayout
 
@@ -17,6 +23,27 @@ class MainActivity : Activity() {
     private var previewId: String? = null
     private var previewLevel: String? = null
     private var activeScroll: android.widget.ScrollView? = null
+    private val refreshHandler = Handler(Looper.getMainLooper())
+    private val midnightRefresh = object : Runnable {
+        override fun run() {
+            // Change the day shown on screen even if MathGate stayed open at 00:00.
+            render(preserveScroll = true)
+            scheduleMidnightRefresh()
+        }
+    }
+
+    private fun scheduleMidnightRefresh() {
+        refreshHandler.removeCallbacks(midnightRefresh)
+        val zone = ZoneId.systemDefault()
+        val now = System.currentTimeMillis()
+        val nextMidnight = java.time.Instant.ofEpochMilli(now)
+            .atZone(zone).toLocalDate().plusDays(1)
+            .atStartOfDay(zone).toInstant().toEpochMilli()
+        // A small delay ensures the OS has completed its midnight rollover.
+        refreshHandler.postDelayed(
+            midnightRefresh, (nextMidnight - now + 750L).coerceAtLeast(1000L)
+        )
+    }
 
     /**
      * A practice preview only. It does not change the locked challenge's seed,
@@ -50,6 +77,7 @@ class MainActivity : Activity() {
             return
         }
         render()
+        scheduleMidnightRefresh()
         val waiting = pendingApk
         if (waiting != null && AppUpdater.mayInstall(this)) {
             pendingApk = null
@@ -60,6 +88,11 @@ class MainActivity : Activity() {
                 render()
             }
         }
+    }
+
+    override fun onPause() {
+        refreshHandler.removeCallbacks(midnightRefresh)
+        super.onPause()
     }
 
     private fun accessibilityEnabled(): Boolean {
@@ -178,10 +211,14 @@ class MainActivity : Activity() {
             15f, GateUi.MUTED), bottom = 21)
 
         val summary = GateUi.panel(this, true)
-        GateUi.add(summary, GateUi.text(this, "TODAY'S INSTAGRAM USAGE",
+        val localDay = LocalDate.now(ZoneId.systemDefault())
+            .format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.US))
+            .uppercase(Locale.US)
+        GateUi.add(summary, GateUi.text(this,
+            "TODAY'S INSTAGRAM USAGE  ·  " + localDay,
             12f, GateUi.LIME, true))
         GateUi.add(summary, GateUi.text(this,
-            if (used < 0) "Permission required"
+            if (used < 0) "Usage history unavailable"
             else GateState.timeLabel(used) + " / " + GateState.timeLabel(allowance),
             if (used < 0) 22f else 30f, GateUi.WHITE, true),
             top = 10, bottom = 9)
