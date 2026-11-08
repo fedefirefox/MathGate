@@ -38,6 +38,18 @@ jobs:
           assert "DailyUsageCalculator.previousLocalMidnight(" in code
           print("Midnight-boundary implementation checked")
           PY
+      - name: Verify Android lifecycle event IDs and activity tracking
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          calculator = Path("app/src/main/java/dev/mathgate/DailyUsageCalculator.kt").read_text()
+          state = Path("app/src/main/java/dev/mathgate/GateState.kt").read_text()
+          assert "const val KEYGUARD_SHOWN = 17" in calculator
+          assert "const val KEYGUARD_HIDDEN = 18" in calculator
+          assert "val className: String?" in calculator
+          assert state.count("event.className") >= 2
+          print("Android keyguard IDs and per-Activity usage tracking verified")
+          PY
       - name: Unit-test non-repeating question selection
         run: gradle --no-daemon testDebugUnitTest
       - name: Build debug APK

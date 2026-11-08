@@ -9,7 +9,23 @@
 
 MathGate is a free, public-source Android app. It uses a light graphite, electric lime, and teal interface, and an offline mathematical equation display.
 
-## What's in version 0.9.3? — Midnight reset repair
+## What's in version 0.9.4? — More accurate Instagram foreground time
+
+**Fixed two actual usage-accounting bugs:**
+- Android **KEYGUARD_SHOWN** is event **17** (phone locked), not 18. Event 18 means the keyguard was *hidden* (phone unlocked). The old code could incorrectly stop counting Instagram when the user unlocked the screen.
+- Android reports resume/pause events per **Activity**, not per entire app. When Instagram transitions from its feed to Reels, a delayed pause from the feed must not terminate a session if Reels is already resumed. MathGate now tracks the active Activity class and ignores the stale pause.
+
+The 20-minute daily base and +5 minutes per solved challenge are unchanged. The midnight clipping fix from v0.9.3 also remains.
+
+**Inspect discrepancies on your Samsung:** MathGate's dashboard now includes **VERIFY INSTAGRAM USAGE**, with two controls:
+- **Check counted time with a short Instagram visit:** record an initial counter, browse Instagram for roughly one minute, return to MathGate and compare the elapsed wall time with the foreground duration MathGate measured. This does not award minutes, change the limit or bypass the math challenge. It is disabled if you are already locked out.
+- **Compare Android usage sources:** show MathGate's event-derived counter alongside Android's aggregate daily UsageStats value. The aggregate is **diagnostic only** because Android may widen its interval and include neighboring time periods. Neither value is Samsung's private Digital Wellbeing counter.
+
+If Samsung's Digital Wellbeing timer still differs, take a screenshot of that timer and MathGate's comparison panel at nearly the same moment. The standard Android APIs cannot retrieve Samsung's private timer directly, and Activity class names are not unique identifiers for every Android Activity instance. A small disagreement may remain.
+
+Tests now cover the Android keyguard event IDs, unlocking/locking, Feed-to-Reels transitions, delayed Activity pauses, and switching to another app. CI checks that Activity class information actually reaches the calculator.
+
+## Previous version 0.9.3 — Midnight reset repair
 
 **Fixes previous-day Instagram usage surviving local midnight.** MathGate v0.9.2 combined timestamped foreground events with pre-aggregated Android daily usage buckets. Android documents that its daily usage query may expand the requested range to whole interval periods. Taking the maximum could therefore carry yesterday's usage into today.
 
@@ -164,7 +180,7 @@ Math renderer supports common TeX fractions, radicals, superscripts/subscripts, 
 
 Requires Java 17, Android SDK 35, Gradle 8.9. Before building, run the question-bank validator, then Gradle assembleDebug.
 
-App version **0.9.3**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
+App version **0.9.4**. Bundled question library revision **2**, with 54 problems. Problem-library schema version **1**. Licensed MIT.
 
 ## Repository protection status
 

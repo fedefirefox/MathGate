@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.4 — Foreground-time measurement accuracy + diagnostics
+- Correct KEYGUARD_SHOWN event constant 17 and KEYGUARD_HIDDEN constant 18.
+- Handle multiple Instagram activities: a stale pause from a previous Activity no longer stops the current Feed/Reels session.
+- Include Activity class names in both foreground recovery and daily usage reconstruction.
+- Add a one-minute interactive counter check in the Android dashboard and a diagnostic comparison to the system's approximate daily UsageStats aggregate.
+- Label the Android aggregate as approximate and never use it for enforcement. Samsung Digital Wellbeing's private counter is not accessible.
+- Add six regression tests for lock/unlock, Feed-to-Reels, stale Activity pauses and app-switching.
+- Preserve v0.9.3 local-midnight clipping, v0.9.2 accessibility overlay and v0.9.0 non-repeating questions.
+
 ## v0.9.3 — Correct midnight rollover and daily usage window
 - Removed pre-aggregated Android daily usage statistics that can include expanded intervals outside the requested midnight boundary.
 - Derive today's Instagram foreground time from timestamped events clipped to local midnight, with previous-local-day lookback for sessions spanning midnight.

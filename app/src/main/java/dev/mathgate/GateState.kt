@@ -109,7 +109,8 @@ object GateState {
             entries.add(DailyUsageCalculator.Event(
                 event.timeStamp,
                 event.packageName,
-                event.eventType
+                event.eventType,
+                event.className
             ))
         }
         val calculated = DailyUsageCalculator.todayMs(
@@ -146,10 +147,32 @@ object GateState {
             entries.add(DailyUsageCalculator.Event(
                 event.timeStamp,
                 event.packageName,
-                event.eventType
+                event.eventType,
+                event.className
             ))
         }
         return DailyUsageCalculator.foreground(entries)
+    }
+
+    /**
+     * Comparison-only value: Android's aggregated daily usage bucket.
+     * It may cover an expanded interval and is NOT an exact Digital Wellbeing
+     * counter. Never use it to grant/deny Instagram access.
+     */
+    fun aggregateBucketForDiagnostics(c: Context): Long? {
+        if (!hasUsageAccess(c)) return null
+        val now = System.currentTimeMillis()
+        val midnight = DailyUsageCalculator.localMidnight(
+            now, ZoneId.systemDefault()
+        )
+        val manager = c.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        return try {
+            manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, midnight, now)
+                ?.filter { it.packageName == INSTAGRAM }
+                ?.maxOfOrNull { it.totalTimeInForeground }
+        } catch (_: SecurityException) {
+            null
+        }
     }
 
     fun remainingMs(c: Context): Long {

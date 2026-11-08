@@ -23,6 +23,9 @@ class MainActivity : Activity() {
     private var previewId: String? = null
     private var previewLevel: String? = null
     private var activeScroll: android.widget.ScrollView? = null
+    private val usageCheck by lazy {
+        getSharedPreferences("mathgate_usage_counter_check", MODE_PRIVATE)
+    }
     private val refreshHandler = Handler(Looper.getMainLooper())
     private val midnightRefresh = object : Runnable {
         override fun run() {
@@ -125,6 +128,54 @@ class MainActivity : Activity() {
             feedback = "Cannot launch Instagram for the lock test: " + error.message
             render(preserveScroll = true)
         }
+    }
+
+    /**
+     * A controlled foreground-time check. It never grants minutes, changes
+     * allowances, alters the lock test, or replaces system timer counters.
+     */
+    private fun startUsageCounterCheck() {
+        val before = GateState.usedMs(this)
+        if (GateState.needsChallenge(this)) {
+            feedback = "Usage check unavailable while the Instagram limit is exhausted. " +
+                "Complete a math challenge first."
+            render(preserveScroll = true)
+            return
+        }
+        if (before < 0L) {
+            feedback = "Cannot measure: Android Usage Access is unavailable."
+            render(preserveScroll = true)
+            return
+        }
+        val intent = packageManager.getLaunchIntentForPackage(GateState.INSTAGRAM)
+        if (intent == null) {
+            feedback = "The standard Instagram Android app was not found."
+            render(preserveScroll = true)
+            return
+        }
+        usageCheck.edit()
+            .putLong("startedAtMs", System.currentTimeMillis())
+            .putString("startedDay", LocalDate.now(ZoneId.systemDefault()).toString())
+            .putLong("startedUsageMs", before)
+            .commit()
+        startActivity(intent)
+    }
+
+    private fun usageCheckReport(usedTodayMs: Long): String? {
+        val started = usageCheck.getLong("startedAtMs", 0L)
+        if (started <= 0L || usedTodayMs < 0L) return null
+        if (usageCheck.getString("startedDay", null) !=
+            LocalDate.now(ZoneId.systemDefault()).toString()) {
+            return "The calendar day changed during this check. Start a new check today."
+        }
+        val elapsed = System.currentTimeMillis() - started
+        if (elapsed < 0L) return "Phone clock changed during the counter check."
+        val startingUsage = usageCheck.getLong("startedUsageMs", 0L)
+        val counted = (usedTodayMs - startingUsage).coerceAtLeast(0L)
+        return "Since starting the check: elapsed " + GateState.timeLabel(elapsed) +
+            "; Instagram foreground counted " + GateState.timeLabel(counted) +
+            ". Return to MathGate after browsing Instagram for about one minute. " +
+            "The two times need not match exactly: switching apps also takes time."
     }
 
     private fun checkQuestions() {
@@ -230,7 +281,39 @@ class MainActivity : Activity() {
             else GateState.timeLabel(GateState.remainingMs(this)) +
                 " remaining · " + bonus + " equations solved",
             14f, GateUi.WHITE))
-        GateUi.add(root, summary, bottom = 20)
+        GateUi.add(root, summary, bottom = 14)
+
+        val auditCard = GateUi.panel(this)
+        GateUi.add(auditCard, GateUi.text(this,
+            "VERIFY INSTAGRAM USAGE", 13f, GateUi.TEAL, true), bottom = 5)
+        GateUi.add(auditCard, GateUi.text(this,
+            "MathGate uses Android foreground events, not Samsung's private " +
+            "Digital Wellbeing timer. They may disagree. " +
+            "A screen-time mismatch should be investigated, not hidden.",
+            13f, GateUi.MUTED), bottom = 9)
+        usageCheckReport(used)?.let { report ->
+            GateUi.add(auditCard, GateUi.text(this, report,
+                13f, GateUi.INK), bottom = 9)
+        }
+        GateUi.add(auditCard, GateUi.button(this,
+            "Check counted time with a short Instagram visit",
+            GateUi.LIME, GateUi.INK) {
+            startUsageCounterCheck()
+        }, bottom = 8)
+        GateUi.add(auditCard, GateUi.button(this,
+            "Compare Android usage sources",
+            GateUi.SOFT, GateUi.INK) {
+            val aggregate = GateState.aggregateBucketForDiagnostics(this)
+            val current = GateState.usedMs(this)
+            feedback = "MathGate precise event count: " +
+                (if (current < 0L) "unavailable" else GateState.timeLabel(current)) +
+                "; Android daily aggregate: " +
+                (aggregate?.let { GateState.timeLabel(it) } ?: "unavailable") +
+                ". The aggregate can cover an expanded period and is for diagnosis only; " +
+                "it is NOT Samsung Digital Wellbeing's private timer."
+            render(preserveScroll = true)
+        })
+        GateUi.add(root, auditCard, bottom = 15)
 
         GateUi.add(root, GateUi.button(this,
             "View permission setup checklist", GateUi.SOFT, GateUi.INK) {

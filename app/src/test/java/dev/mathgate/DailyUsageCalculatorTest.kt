@@ -112,4 +112,80 @@ class DailyUsageCalculatorTest {
             DailyUsageCalculator.ACTIVITY_RESUMED))
         assertEquals(0L, DailyUsageCalculator.todayMs(events, midnight, midnight, instagram))
     }
+
+    @Test fun androidKeyguardEventNumbersAreCorrect() {
+        assertEquals(17, DailyUsageCalculator.KEYGUARD_SHOWN)
+        assertEquals(18, DailyUsageCalculator.KEYGUARD_HIDDEN)
+    }
+
+    @Test fun unlockingDoesNotTruncateForegroundUsage() {
+        val day = LocalDate.of(2026, 11, 8)
+        val events = listOf(
+            e(at(day, 8, 0), instagram, DailyUsageCalculator.ACTIVITY_RESUMED),
+            e(at(day, 8, 5), "android", DailyUsageCalculator.KEYGUARD_HIDDEN),
+            e(at(day, 8, 10), instagram, DailyUsageCalculator.ACTIVITY_PAUSED)
+        )
+        assertEquals(10 * 60_000L, DailyUsageCalculator.todayMs(
+            events, at(day, 0, 0), at(day, 8, 11), instagram))
+    }
+
+    @Test fun lockingDoesEndForegroundUsage() {
+        val day = LocalDate.of(2026, 11, 8)
+        val events = listOf(
+            e(at(day, 8, 0), instagram, DailyUsageCalculator.ACTIVITY_RESUMED),
+            e(at(day, 8, 5), "android", DailyUsageCalculator.KEYGUARD_SHOWN)
+        )
+        assertEquals(5 * 60_000L, DailyUsageCalculator.todayMs(
+            events, at(day, 0, 0), at(day, 8, 11), instagram))
+    }
+
+    @Test fun feedToReelsDoesNotDropRemainingForegroundSession() {
+        val day = LocalDate.of(2026, 11, 8)
+        val t = { minute: Int -> at(day, 9, minute) }
+        val events = listOf(
+            DailyUsageCalculator.Event(t(0), instagram,
+                DailyUsageCalculator.ACTIVITY_RESUMED, "FeedActivity"),
+            DailyUsageCalculator.Event(t(3), instagram,
+                DailyUsageCalculator.ACTIVITY_RESUMED, "ReelsActivity"),
+            // Older feed Activity pauses AFTER Reels has already resumed.
+            DailyUsageCalculator.Event(t(4), instagram,
+                DailyUsageCalculator.ACTIVITY_PAUSED, "FeedActivity"),
+            DailyUsageCalculator.Event(t(10), instagram,
+                DailyUsageCalculator.ACTIVITY_PAUSED, "ReelsActivity")
+        )
+        assertEquals(10 * 60_000L, DailyUsageCalculator.todayMs(
+            events, at(day, 0, 0), at(day, 9, 11), instagram))
+        val whileReels = events.take(3)
+        assertEquals(instagram, DailyUsageCalculator.foreground(whileReels))
+    }
+
+    @Test fun interleavedPauseFromAnotherPackageDoesNotEndInstagram() {
+        val day = LocalDate.of(2026, 11, 8)
+        val events = listOf(
+            DailyUsageCalculator.Event(at(day, 9, 0), instagram,
+                DailyUsageCalculator.ACTIVITY_RESUMED, "ReelsActivity"),
+            DailyUsageCalculator.Event(at(day, 9, 4), "com.android.settings",
+                DailyUsageCalculator.ACTIVITY_PAUSED, "SettingsActivity"),
+            DailyUsageCalculator.Event(at(day, 9, 7), instagram,
+                DailyUsageCalculator.ACTIVITY_STOPPED, "ReelsActivity")
+        )
+        assertEquals(7 * 60_000L, DailyUsageCalculator.todayMs(
+            events, at(day, 0, 0), at(day, 9, 8), instagram))
+    }
+
+    @Test fun anotherAppResumedEndsInstagramSessionEvenIfOldPauseIsLate() {
+        val day = LocalDate.of(2026, 11, 8)
+        val events = listOf(
+            DailyUsageCalculator.Event(at(day, 9, 0), instagram,
+                DailyUsageCalculator.ACTIVITY_RESUMED, "ReelsActivity"),
+            DailyUsageCalculator.Event(at(day, 9, 6), "dev.mathgate",
+                DailyUsageCalculator.ACTIVITY_RESUMED, "MainActivity"),
+            DailyUsageCalculator.Event(at(day, 9, 7), instagram,
+                DailyUsageCalculator.ACTIVITY_PAUSED, "ReelsActivity")
+        )
+        assertEquals(6 * 60_000L, DailyUsageCalculator.todayMs(
+            events, at(day, 0, 0), at(day, 9, 8), instagram))
+        assertEquals("dev.mathgate", DailyUsageCalculator.foreground(events))
+    }
+
 }
