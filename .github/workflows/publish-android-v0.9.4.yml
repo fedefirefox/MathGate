@@ -1,0 +1,52 @@
+name: Publish MathGate Android v0.9.4 (usage counter accuracy)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-android-v0.9.4.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve successfully built and tested APK
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mathgate-v094
+          gh run download 42507365021 --repo fedefirefox/MathGate \
+            --name MathGate-debug-apk --dir /tmp/mathgate-v094
+          test -s /tmp/mathgate-v094/app-debug.apk
+          cp /tmp/mathgate-v094/app-debug.apk MathGate-v0.9.4.apk
+          sha256sum MathGate-v0.9.4.apk > MathGate-v0.9.4.sha256
+          file MathGate-v0.9.4.apk
+          test "$(stat -c%s MathGate-v0.9.4.apk)" -gt 1000000
+      - name: Publish public Android APK, checksum and ZIP fallback
+        run: |
+          set -euo pipefail
+          zip -9 MathGate-v0.9.4.zip MathGate-v0.9.4.apk MathGate-v0.9.4.sha256
+          gh release create v0.9.4 \
+            MathGate-v0.9.4.apk \
+            MathGate-v0.9.4.sha256 \
+            MathGate-v0.9.4.zip \
+            --repo fedefirefox/MathGate \
+            --target 56a451ac5cde1e93c7ed02403d1bba6020f7bacb \
+            --title 'MathGate Android v0.9.4 — Fix Instagram usage time discrepancies' \
+            --notes 'Corrects two demonstrated Android usage-accounting issues: KEYGUARD_SHOWN is event 17, not 18; stale pause from Instagram Feed should not terminate Reels foreground time. Preserves local-midnight rollover and 20-minute base plus 5-minute mathematics rewards. New dashboard lets you check an approximately one-minute Instagram visit and compare event-derived usage to the Android aggregated diagnostic bucket (not Samsung Digital Wellbeing). Expanded JUnit regression tests pass. IMPORTANT: public APK remains debug-signed and may require uninstall/reinstall due to signing certificate mismatch. Device testing on Samsung is still needed; exact equality to Digital Wellbeing is not guaranteed.'
+      - name: Independently verify public APK download against SHA-256
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-delay 2 \
+            --output public.apk \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.9.4/MathGate-v0.9.4.apk
+          EXPECTED="$(cut -d' ' -f1 MathGate-v0.9.4.sha256)"
+          ACTUAL="$(sha256sum public.apk | cut -d' ' -f1)"
+          test "$EXPECTED" = "$ACTUAL"
+          echo "Public APK verified: $ACTUAL"
