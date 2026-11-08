@@ -1,0 +1,51 @@
+name: Publish MathGate Android v0.9.3 (midnight reset repair)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-android-v0.9.3.yml'
+  workflow_dispatch:
+jobs:
+  publish:
+    if: github.repository == 'fedefirefox/MathGate' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve tested MathGate v0.9.3 APK
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mathgate-v093
+          gh run download 42461943061 --repo fedefirefox/MathGate \
+            --name MathGate-debug-apk --dir /tmp/mathgate-v093
+          test -s /tmp/mathgate-v093/app-debug.apk
+          cp /tmp/mathgate-v093/app-debug.apk MathGate-v0.9.3.apk
+          sha256sum MathGate-v0.9.3.apk > MathGate-v0.9.3.sha256
+          file MathGate-v0.9.3.apk
+          test "$(stat -c%s MathGate-v0.9.3.apk)" -gt 1000000
+      - name: Publish direct APK and ZIP fallback
+        run: |
+          set -euo pipefail
+          zip -9 MathGate-v0.9.3.zip MathGate-v0.9.3.apk MathGate-v0.9.3.sha256
+          gh release create v0.9.3 \
+            MathGate-v0.9.3.apk \
+            MathGate-v0.9.3.sha256 \
+            MathGate-v0.9.3.zip \
+            --repo fedefirefox/MathGate \
+            --target adbb0236cc581bb1250f754fb57c24460cc66247 \
+            --title 'MathGate Android v0.9.3 — Fix daily Instagram reset at midnight' \
+            --notes 'Fixes midnight carryover. Android daily aggregated UsageStats could include an expanded interval outside midnight-to-now. MathGate now clips timestamped foreground events strictly to the current local calendar day and preserves sessions spanning midnight. Automatic dashboard rollover and correct 23/25-hour DST days included. Ten new midnight regression tests passed, as did Android APK build and existing tests. Still uses a debug APK certificate; Android may require uninstalling the previous build to install this one. Physically verify the reset on your Samsung.'
+      - name: Verify public download and checksum
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-delay 2 \
+            --output downloaded.apk \
+            https://github.com/fedefirefox/MathGate/releases/download/v0.9.3/MathGate-v0.9.3.apk
+          EXPECTED="$(cut -d' ' -f1 MathGate-v0.9.3.sha256)"
+          ACTUAL="$(sha256sum downloaded.apk | cut -d' ' -f1)"
+          [ "$EXPECTED" = "$ACTUAL" ]
+          echo "Public APK verified: $ACTUAL"
